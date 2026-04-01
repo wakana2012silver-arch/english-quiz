@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>英語フレーズクイズ</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<style>
+  :root {
+    --green: #06C755;
+    --green-dark: #05A847;
+    --bg: #0f172a;
+    --surface: #1e293b;
+    --surface2: #273548;
+    --border: rgba(255,255,255,0.08);
+    --text: #e2e8f0;
+    --text-dim: #64748b;
+    --correct: #2ed573;
+    --wrong: #ff4757;
+    --gold: #fbbf24;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { width: 100%; height: 100%; }
+
+  body {
+    font-family: 'Noto Sans JP', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 14px 16px 32px;
+    background-image:
+      radial-gradient(ellipse at 15% 0%, rgba(6,199,85,0.07) 0%, transparent 55%),
+      radial-gradient(ellipse at 85% 100%, rgba(6,199,85,0.05) 0%, transparent 55%);
+  }
+
+  .wrap { width: 100%; display: flex; flex-direction: column; gap: 12px; }
+
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 12px 6px;
+    text-align: center;
+  }
+  .stat-num { font-size: 24px; font-weight: 700; font-family: 'Space Mono', monospace; line-height: 1; }
+  .stat-label { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+  .s-total .stat-num { color: var(--text); }
+  .s-ok    .stat-num { color: var(--correct); }
+  .s-ng    .stat-num { color: var(--wrong); }
+  .s-rate  .stat-num { color: var(--gold); }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 20px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    animation: fadeUp 0.3s ease;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .card-tag { display: flex; align-items: center; gap: 8px; }
+  .tag-quiz {
+    font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 20px;
+    background: rgba(6,199,85,0.12); color: var(--green); border: 1px solid rgba(6,199,85,0.25);
+  }
+  .q-num { margin-left: auto; font-size: 13px; color: var(--text-dim); font-family: 'Space Mono', monospace; }
+
+  .sentence {
+    font-size: 18px; line-height: 1.85; color: #c7d9f5;
+    background: rgba(255,255,255,0.03); border-radius: 14px;
+    padding: 16px 18px; border: 1px solid var(--border); word-break: break-word;
+  }
+  .blank {
+    display: inline-block; background: rgba(6,199,85,0.1);
+    border: 1.5px dashed var(--green); border-radius: 7px; padding: 2px 12px;
+    color: var(--green); font-family: 'Space Mono', monospace;
+    font-size: 15px; font-weight: 700; min-width: 70px; text-align: center;
+  }
+  .hint { font-size: 14px; color: var(--text-dim); display: flex; align-items: flex-start; gap: 6px; line-height: 1.65; }
+
+  .choices { display: flex; flex-direction: column; gap: 10px; }
+  .choice {
+    background: var(--surface2); border: 1.5px solid var(--border); border-radius: 14px;
+    padding: 16px; cursor: pointer; font-size: 15px; font-family: 'Space Mono', monospace;
+    color: var(--text); text-align: left; display: flex; align-items: center; gap: 12px;
+    transition: all 0.15s ease; width: 100%; line-height: 1.5; word-break: break-word;
+    -webkit-appearance: none; appearance: none;
+  }
+  .choice:active:not(:disabled) { transform: scale(0.98); background: rgba(6,199,85,0.06); }
+  .choice:disabled { cursor: default; }
+  .choice.correct { background: rgba(46,213,115,0.1); border-color: var(--correct); color: var(--correct); }
+  .choice.wrong   { background: rgba(255,71,87,0.08); border-color: var(--wrong); color: var(--wrong); opacity: 0.7; }
+  .choice.reveal  { background: rgba(46,213,115,0.06); border-color: rgba(46,213,115,0.3); color: var(--correct); }
+  .choice-num {
+    width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,0.06);
+    display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0;
+  }
+  .choice.correct .choice-num { background: var(--correct); color: #000; }
+  .choice.wrong   .choice-num { background: var(--wrong);   color: #fff; }
+
+  .result-card {
+    background: var(--surface); border-radius: 20px; padding: 20px 18px;
+    border: 1px solid var(--border); animation: fadeUp 0.3s ease;
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .result-header { font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+  .result-header.ok { color: var(--correct); }
+  .result-header.ng { color: var(--wrong); }
+
+  .answer-box { background: rgba(6,199,85,0.07); border: 1px solid rgba(6,199,85,0.18); border-radius: 12px; padding: 14px 16px; }
+  .answer-phrase { font-family: 'Space Mono', monospace; font-size: 15px; font-weight: 700; color: var(--correct); word-break: break-word; }
+  .answer-role   { font-size: 13px; color: var(--text-dim); margin-top: 4px; }
+  .divider       { border: none; border-top: 1px solid var(--border); }
+  .result-jp     { font-size: 14px; line-height: 1.75; color: var(--text-dim); }
+  .result-en     { font-size: 14px; line-height: 1.75; color: #a0b4cc; word-break: break-word; }
+
+  .next-btn {
+    background: var(--green); color: #fff; border: none; border-radius: 16px;
+    padding: 18px; font-size: 16px; font-weight: 700; cursor: pointer;
+    font-family: 'Noto Sans JP', sans-serif; transition: all 0.15s ease;
+    box-shadow: 0 4px 14px rgba(6,199,85,0.3); width: 100%;
+    -webkit-appearance: none; appearance: none;
+  }
+  .next-btn:active { transform: scale(0.98); box-shadow: 0 2px 8px rgba(6,199,85,0.2); }
+
+  .loading {
+    display: flex; align-items: center; justify-content: center;
+    gap: 8px; padding: 60px 20px; color: var(--text-dim); font-size: 15px;
+  }
+  .dot { width: 8px; height: 8px; background: var(--green); border-radius: 50%; animation: bounce 1.2s infinite; }
+  .dot:nth-child(2) { animation-delay: 0.2s; }
+  .dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes bounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.6; }
+    30% { transform: translateY(-6px); opacity: 1; }
+  }
+
+  .hidden { display: none !important; }
+
+  .streak-bar { display: flex; align-items: center; justify-content: flex-end; }
+  .streak-badge {
+    font-size: 13px; font-weight: 700; color: var(--gold);
+    background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.2);
+    border-radius: 20px; padding: 5px 14px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="streak-bar">
+    <div class="streak-badge">🔥 <span id="streakNum">0</span> 連続正解</div>
+  </div>
+
+  <div class="stats">
+    <div class="stat s-total"><div class="stat-num" id="totalNum">0</div><div class="stat-label">問題数</div></div>
+    <div class="stat s-ok">  <div class="stat-num" id="okNum">0</div>  <div class="stat-label">正解</div></div>
+    <div class="stat s-ng">  <div class="stat-num" id="ngNum">0</div>  <div class="stat-label">不正解</div></div>
+    <div class="stat s-rate"><div class="stat-num" id="rateNum">-</div><div class="stat-label">正答率</div></div>
+  </div>
+
+  <div class="loading" id="loading">
+    <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+    <span>問題を読み込み中...</span>
+  </div>
+
+  <div class="card hidden" id="quizCard">
+    <div class="card-tag">
+      <span class="tag-quiz">🇬🇧 穴埋めクイズ</span>
+      <span class="q-num" id="qNum">Q1</span>
+    </div>
+    <div class="sentence" id="sentenceEl"></div>
+    <div class="hint"     id="hintEl"></div>
+    <div class="choices"  id="choicesEl"></div>
+  </div>
+
+  <div class="result-card hidden" id="resultCard">
+    <div class="result-header" id="resultHeader"></div>
+    <div class="answer-box">
+      <div class="answer-phrase" id="answerPhrase"></div>
+      <div class="answer-role"   id="answerRole"></div>
+    </div>
+    <hr class="divider">
+    <div class="result-jp" id="resultJp"></div>
+    <div class="result-en" id="resultEn"></div>
+  </div>
+
+  <button class="next-btn hidden" id="nextBtn" onclick="nextQuiz()">次の問題へ →</button>
+
+</div>
+
+<script>
+  // ★スプレッドシートのCSV公開URL
+  const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQnCTkmh0HSb-kfodK4N492cJPBdy99ONO4lqoMw2erSgVJtAWsGsdNTp_G0nUCuvHjvyACDfSUeK1s/pub?gid=0&single=true&output=csv';
+
+  // ★LIFF ID
+  const LIFF_ID = '2009654666-bNmDrrps';
+
+  const HISTORY_SIZE = 15;
+  const STORAGE_KEY  = 'quiz_history';
+
+  let allPhrases = [];
+  let stats      = { total: 0, ok: 0, ng: 0, streak: 0 };
+  let current    = null;
+
+  // ========== 初期化 ==========
+  window.onload = async () => {
+    show('loading');
+    try {
+      await liff.init({ liffId: LIFF_ID });
+    } catch(e) {
+      console.log('LIFF init:', e);
+    }
+    await loadPhrases();
+    showQuiz();
+  };
+
+  // ========== CSVからデータ読み込み（CORSプロキシ対応）==========
+  async function loadPhrases() {
+    try {
+      const res  = await fetch(CSV_URL + '&cachebust=' + Date.now());
+      const text = await res.text();
+      allPhrases = parseCSV(text);
+    } catch(e) {
+      // CORSエラーの場合はcorsproxyを経由
+      try {
+        const proxy = 'https://corsproxy.io/?' + encodeURIComponent(CSV_URL);
+        const res2  = await fetch(proxy);
+        const text2 = await res2.text();
+        allPhrases  = parseCSV(text2);
+      } catch(e2) {
+        document.getElementById('loading').innerHTML = '⚠️ データ読み込みエラー';
+      }
+    }
+  }
+
+  // CSVパース（ダブルクォート対応）
+  function parseCSV(text) {
+    const lines = text.trim().split('\n');
+    return lines
+      .map((line, i) => {
+        const cols = splitCSVLine(line);
+        return {
+          rowNum      : i + 1,
+          phrase      : cols[0] || '',
+          role        : cols[1] || '',
+          translation : cols[2] || '',
+          sentence    : cols[3] || '',
+          group       : cols[4] || '',
+        };
+      })
+      .filter(r => r.phrase && r.sentence);
+  }
+
+  function splitCSVLine(line) {
+    const result = [];
+    let cur = '', inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (c === '"') { inQ = !inQ; continue; }
+      if (c === ',' && !inQ) { result.push(cur.trim()); cur = ''; continue; }
+      cur += c;
+    }
+    result.push(cur.trim());
+    return result;
+  }
+
+  // ========== 問題表示 ==========
+  function showQuiz() {
+    hide('quizCard');
+    hide('resultCard');
+    hide('nextBtn');
+
+    const history = getHistory();
+    let available = allPhrases.filter(p => !history.includes(p.rowNum));
+    if (available.length === 0) {
+      clearHistory();
+      available = [...allPhrases];
+    }
+
+    current = available[Math.floor(Math.random() * available.length)];
+    addHistory(current.rowNum);
+
+    document.getElementById('qNum').textContent = `Q${stats.total + 1}`;
+
+    const quizSentence = makeBlankSentence(current.phrase, current.sentence);
+    const sentenceHtml = quizSentence.replace('(  )', '<span class="blank">(  )</span>');
+    document.getElementById('sentenceEl').innerHTML = sentenceHtml;
+    document.getElementById('hintEl').innerHTML = `<span>📝</span><span>${current.translation}</span>`;
+
+    const choices = makeChoices(current.phrase, current.group);
+    const choicesEl = document.getElementById('choicesEl');
+    choicesEl.innerHTML = '';
+    choices.forEach((c, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'choice';
+      btn.innerHTML = `<span class="choice-num">${i + 1}</span>${c}`;
+      btn.onclick = () => answer(c, btn);
+      choicesEl.appendChild(btn);
+    });
+
+    hide('loading');
+    show('quizCard');
+  }
+
+  // ========== 回答処理 ==========
+  function answer(selected, clickedBtn) {
+    document.querySelectorAll('.choice').forEach(b => b.disabled = true);
+
+    const isCorrect = selected === current.phrase;
+
+    document.querySelectorAll('.choice').forEach(btn => {
+      const phrase = btn.textContent.replace(/^[123]/, '').trim();
+      if (phrase === current.phrase) {
+        btn.classList.add(btn === clickedBtn ? 'correct' : 'reveal');
+      } else if (btn === clickedBtn) {
+        btn.classList.add('wrong');
+      }
+    });
+
+    stats.total++;
+    if (isCorrect) { stats.ok++; stats.streak++; }
+    else           { stats.ng++; stats.streak = 0; }
+    updateStats();
+
+    document.getElementById('resultHeader').className   = `result-header ${isCorrect ? 'ok' : 'ng'}`;
+    document.getElementById('resultHeader').textContent = isCorrect ? '✅ Correct！' : '❌ Incorrect';
+    document.getElementById('answerPhrase').textContent = current.phrase;
+    document.getElementById('answerRole').textContent   = '役割：' + current.role;
+    document.getElementById('resultJp').textContent     = '🇯🇵 ' + current.translation;
+    document.getElementById('resultEn').textContent     = '🇬🇧 ' + current.sentence;
+
+    show('resultCard');
+    show('nextBtn');
+  }
+
+  function nextQuiz() {
+    show('loading');
+    setTimeout(() => showQuiz(), 100);
+  }
+
+  // ========== 履歴管理（localStorage）==========
+  function getHistory() {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    } catch { return []; }
+  }
+  function addHistory(rowNum) {
+    let h = getHistory();
+    h.push(rowNum);
+    if (h.length > HISTORY_SIZE) h.shift();
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(h));
+  }
+  function clearHistory() {
+    localStorage.removeItem(STORAGE_KEY);
+  }
+
+  // ========== 穴埋め生成 ==========
+  function makeBlankSentence(phrase, sentence) {
+    const clean = phrase.replace(/[~〜（(）)]/g, '').replace(/（.+?）/g, '').trim();
+    const exact = new RegExp(escapeRegExp(clean), 'i');
+    if (exact.test(sentence)) return sentence.replace(exact, '(  )');
+
+    const first2 = clean.split(/\s+/).slice(0, 2).join('\\s+');
+    if (first2) {
+      const partial = new RegExp(first2 + '[\\w\\s\']*?(?=\\s|,|\\.|$)', 'i');
+      if (partial.test(sentence)) return sentence.replace(partial, '(  )');
+    }
+    return `(  ) → ${sentence}`;
+  }
+
+  // ========== 選択肢生成 ==========
+  function makeChoices(correctPhrase, groupName) {
+    const same  = shuffle(allPhrases.filter(p => p.group === groupName && p.phrase !== correctPhrase)).map(p => p.phrase);
+    const other = shuffle(allPhrases.filter(p => p.group !== groupName && p.phrase !== correctPhrase)).map(p => p.phrase);
+    const dummies = [...same, ...other].slice(0, 2);
+    return shuffle([correctPhrase, ...dummies]);
+  }
+
+  // ========== ユーティリティ ==========
+  function updateStats() {
+    document.getElementById('totalNum').textContent  = stats.total;
+    document.getElementById('okNum').textContent     = stats.ok;
+    document.getElementById('ngNum').textContent     = stats.ng;
+    document.getElementById('rateNum').textContent   = stats.total > 0 ? Math.round(stats.ok / stats.total * 100) + '%' : '-';
+    document.getElementById('streakNum').textContent = stats.streak;
+  }
+
+  function shuffle(array) {
+    const a = [...array];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function escapeRegExp(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+  function show(id) { document.getElementById(id).classList.remove('hidden'); }
+  function hide(id) { document.getElementById(id).classList.add('hidden'); }
+</script>
+</body>
+</html>
