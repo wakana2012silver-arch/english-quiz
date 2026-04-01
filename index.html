@@ -204,8 +204,8 @@
   // ★LIFF ID
   const LIFF_ID = '2009654666-bNmDrrps';
 
-  // ★Apps ScriptのWebアプリURL（/execで終わるもの）
-  const GAS_URL = 'https://script.google.com/macros/s/AKfycbxqgTY8GwHU5zCSU_2USKCirbpks7HjtyTA9PSmX8mYHvmvDOns8Dgsod03luZ-rPyg/exec';
+  // ★Apps ScriptのWebアプリURL
+  const GAS_URL = 'https://script.google.com/macros/s/AKfycbwJ7wK6vpMp5EC-12DKdcekmDjGoNt9BQ8IXnbS2WXXMKflNKHpy-11VCOXsOOYGlBN/exec';
 
   const HISTORY_SIZE = 15;
   const STORAGE_KEY  = 'quiz_history';
@@ -220,7 +220,6 @@
   window.onload = async () => {
     show('loading');
 
-    // LIFF初期化 & ユーザーID取得
     try {
       await liff.init({ liffId: LIFF_ID });
       if (liff.isLoggedIn()) {
@@ -231,7 +230,6 @@
       console.log('LIFF init:', e);
     }
 
-    // CSVとstreakを並行取得
     await Promise.all([
       loadPhrases(),
       loadStreak()
@@ -262,7 +260,10 @@
   async function loadStreak() {
     if (!userId) return;
     try {
-      const res  = await fetch(`${GAS_URL}?action=getStreak&userId=${encodeURIComponent(userId)}`);
+      const res  = await fetch(
+        `${GAS_URL}?action=getStreak&userId=${encodeURIComponent(userId)}`,
+        { redirect: 'follow' }
+      );
       const data = await res.json();
       streak = data.streak || 0;
       updateStreakBadge();
@@ -274,13 +275,15 @@
   // ========== Apps Scriptに連続正解数を保存 ==========
   async function saveStreakToGAS(isCorrect) {
     if (!userId) {
-      // ユーザーIDがない場合はローカルで管理
       streak = isCorrect ? streak + 1 : 0;
       updateStreakBadge();
       return;
     }
     try {
-      const res  = await fetch(`${GAS_URL}?action=saveStreak&userId=${encodeURIComponent(userId)}&isCorrect=${isCorrect}`);
+      const res  = await fetch(
+        `${GAS_URL}?action=saveStreak&userId=${encodeURIComponent(userId)}&isCorrect=${isCorrect}`,
+        { redirect: 'follow' }
+      );
       const data = await res.json();
       streak = data.streak;
       updateStreakBadge();
@@ -384,7 +387,6 @@
     else           stats.ng++;
     updateStats();
 
-    // 連続正解数をApps Scriptに保存
     await saveStreakToGAS(isCorrect);
 
     document.getElementById('resultHeader').className   = `result-header ${isCorrect ? 'ok' : 'ng'}`;
