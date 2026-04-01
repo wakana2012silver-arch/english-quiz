@@ -257,46 +257,34 @@
   }
 
   // ========== Apps Scriptから連続正解数を取得 ==========
-  async function loadStreak() {
-    if (!userId) return;
-    try {
-      const res  = await fetch(
-        `${GAS_URL}?action=getStreak&userId=${encodeURIComponent(userId)}`,
-        { redirect: 'follow' }
-      );
-      const data = await res.json();
-      streak = data.streak || 0;
-      updateStreakBadge();
-    } catch(e) {
-      console.log('streak load error:', e);
-    }
-  }
+ async function loadStreak() {
+  if (!userId) return;
+  return new Promise(resolve => {
+    const url = `${GAS_URL}?action=getStreak&userId=${encodeURIComponent(userId)}&cachebust=${Date.now()}`;
+    const img = new Image();
+    img.onload = img.onerror = resolve;
+    img.src = url;
+  });
+}
 
   // ========== Apps Scriptに連続正解数を保存 ==========
   async function saveStreakToGAS(isCorrect) {
-    if (!userId) {
+  if (!userId) {
+    streak = isCorrect ? streak + 1 : 0;
+    updateStreakBadge();
+    return;
+  }
+  return new Promise(resolve => {
+    const url = `${GAS_URL}?action=saveStreak&userId=${encodeURIComponent(userId)}&isCorrect=${isCorrect}&cachebust=${Date.now()}`;
+    const img = new Image();
+    img.onload = img.onerror = () => {
       streak = isCorrect ? streak + 1 : 0;
       updateStreakBadge();
-      return;
-    }
-    try {
-      const res  = await fetch(
-        `${GAS_URL}?action=saveStreak&userId=${encodeURIComponent(userId)}&isCorrect=${isCorrect}`,
-        { redirect: 'follow' }
-      );
-      const data = await res.json();
-      streak = data.streak;
-      updateStreakBadge();
-    } catch(e) {
-      console.log('streak save error:', e);
-      streak = isCorrect ? streak + 1 : 0;
-      updateStreakBadge();
-    }
-  }
-
-  function updateStreakBadge() {
-    document.getElementById('streakNum').textContent = streak;
-  }
+      resolve();
+    };
+    img.src = url;
+  });
+}
 
   // CSVパース（ダブルクォート対応）
   function parseCSV(text) {
