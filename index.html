@@ -204,33 +204,49 @@
   // ★LIFF ID
   const LIFF_ID = '2009654666-bNmDrrps';
 
+  // ★Apps ScriptのWebアプリURL（/execで終わるもの）
+  const GAS_URL = '★Apps ScriptのWebアプリURLをここに入れてください★';
+
   const HISTORY_SIZE = 15;
   const STORAGE_KEY  = 'quiz_history';
 
   let allPhrases = [];
-  let stats      = { total: 0, ok: 0, ng: 0, streak: 0 };
+  let stats      = { total: 0, ok: 0, ng: 0 };
   let current    = null;
+  let userId     = null;
+  let streak     = 0;
 
   // ========== 初期化 ==========
   window.onload = async () => {
     show('loading');
+
+    // LIFF初期化 & ユーザーID取得
     try {
       await liff.init({ liffId: LIFF_ID });
+      if (liff.isLoggedIn()) {
+        const profile = await liff.getProfile();
+        userId = profile.userId;
+      }
     } catch(e) {
       console.log('LIFF init:', e);
     }
-    await loadPhrases();
+
+    // CSVとstreakを並行取得
+    await Promise.all([
+      loadPhrases(),
+      loadStreak()
+    ]);
+
     showQuiz();
   };
 
-  // ========== CSVからデータ読み込み（CORSプロキシ対応）==========
+  // ========== CSVからデータ読み込み ==========
   async function loadPhrases() {
     try {
       const res  = await fetch(CSV_URL + '&cachebust=' + Date.now());
       const text = await res.text();
       allPhrases = parseCSV(text);
     } catch(e) {
-      // CORSエラーの場合はcorsproxyを経由
       try {
         const proxy = 'https://corsproxy.io/?' + encodeURIComponent(CSV_URL);
         const res2  = await fetch(proxy);
@@ -240,6 +256,43 @@
         document.getElementById('loading').innerHTML = '⚠️ データ読み込みエラー';
       }
     }
+  }
+
+  // ========== Apps Scriptから連続正解数を取得 ==========
+  async function loadStreak() {
+    if (!userId) return;
+    try {
+      const res  = await fetch(`${GAS_URL}?action=getStreak&userId=${encodeURIComponent(userId)}`);
+      const data = await res.json();
+      streak = data.streak || 0;
+      updateStreakBadge();
+    } catch(e) {
+      console.log('streak load error:', e);
+    }
+  }
+
+  // ========== Apps Scriptに連続正解数を保存 ==========
+  async function saveStreakToGAS(isCorrect) {
+    if (!userId) {
+      // ユーザーIDがない場合はローカルで管理
+      streak = isCorrect ? streak + 1 : 0;
+      updateStreakBadge();
+      return;
+    }
+    try {
+      const res  = await fetch(`${GAS_URL}?action=saveStreak&userId=${encodeURIComponent(userId)}&isCorrect=${isCorrect}`);
+      const data = await res.json();
+      streak = data.streak;
+      updateStreakBadge();
+    } catch(e) {
+      console.log('streak save error:', e);
+      streak = isCorrect ? streak + 1 : 0;
+      updateStreakBadge();
+    }
+  }
+
+  function updateStreakBadge() {
+    document.getElementById('streakNum').textContent = streak;
   }
 
   // CSVパース（ダブルクォート対応）
@@ -312,7 +365,7 @@
   }
 
   // ========== 回答処理 ==========
-  function answer(selected, clickedBtn) {
+  async function answer(selected, clickedBtn) {
     document.querySelectorAll('.choice').forEach(b => b.disabled = true);
 
     const isCorrect = selected === current.phrase;
@@ -327,9 +380,12 @@
     });
 
     stats.total++;
-    if (isCorrect) { stats.ok++; stats.streak++; }
-    else           { stats.ng++; stats.streak = 0; }
+    if (isCorrect) stats.ok++;
+    else           stats.ng++;
     updateStats();
+
+    // 連続正解数をApps Scriptに保存
+    await saveStreakToGAS(isCorrect);
 
     document.getElementById('resultHeader').className   = `result-header ${isCorrect ? 'ok' : 'ng'}`;
     document.getElementById('resultHeader').textContent = isCorrect ? '✅ Correct！' : '❌ Incorrect';
@@ -349,9 +405,8 @@
 
   // ========== 履歴管理（localStorage）==========
   function getHistory() {
-    try {
-      return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-    } catch { return []; }
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+    catch { return []; }
   }
   function addHistory(rowNum) {
     let h = getHistory();
@@ -359,9 +414,7 @@
     if (h.length > HISTORY_SIZE) h.shift();
     localStorage.setItem(STORAGE_KEY, JSON.stringify(h));
   }
-  function clearHistory() {
-    localStorage.removeItem(STORAGE_KEY);
-  }
+  function clearHistory() { localStorage.removeItem(STORAGE_KEY); }
 
   // ========== 穴埋め生成 ==========
   function makeBlankSentence(phrase, sentence) {
@@ -391,7 +444,6 @@
     document.getElementById('okNum').textContent     = stats.ok;
     document.getElementById('ngNum').textContent     = stats.ng;
     document.getElementById('rateNum').textContent   = stats.total > 0 ? Math.round(stats.ok / stats.total * 100) + '%' : '-';
-    document.getElementById('streakNum').textContent = stats.streak;
   }
 
   function shuffle(array) {
