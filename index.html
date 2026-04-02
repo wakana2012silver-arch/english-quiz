@@ -106,6 +106,12 @@
   .choice.correct .choice-num { background: var(--correct); color: #000; }
   .choice.wrong   .choice-num { background: var(--wrong);   color: #fff; }
 
+  /* 終了時リザルト画面用スタイル */
+  .final-result {
+    text-align: center; padding: 40px 20px;
+  }
+  .final-score { font-size: 48px; font-weight: 800; color: var(--green); margin: 10px 0; font-family: 'Space Mono', monospace;}
+
   .result-card {
     background: var(--surface); border-radius: 20px; padding: 20px 18px;
     border: 1px solid var(--border); animation: fadeUp 0.3s ease;
@@ -156,55 +162,63 @@
 <body>
 <div class="wrap">
 
-  <div class="streak-bar">
-    <div class="streak-badge">🔥 <span id="streakNum">0</span> 連続正解</div>
-  </div>
-
-  <div class="stats">
-    <div class="stat s-total"><div class="stat-num" id="totalNum">0</div><div class="stat-label">問題数</div></div>
-    <div class="stat s-ok">  <div class="stat-num" id="okNum">0</div>  <div class="stat-label">正解</div></div>
-    <div class="stat s-ng">  <div class="stat-num" id="ngNum">0</div>  <div class="stat-label">不正解</div></div>
-    <div class="stat s-rate"><div class="stat-num" id="rateNum">-</div><div class="stat-label">正答率</div></div>
-  </div>
-
-  <div class="loading" id="loading">
-    <div class="dot"></div><div class="dot"></div><div class="dot"></div>
-    <span>問題を読み込み中...</span>
-  </div>
-
-  <div class="card hidden" id="quizCard">
-    <div class="card-tag">
-      <span class="tag-quiz">🇬🇧 穴埋めクイズ</span>
-      <span class="q-num" id="qNum">Q1</span>
+  <div id="gameContainer">
+    <div class="streak-bar">
+      <div class="streak-badge">🔥 <span id="streakNum">0</span> 連続正解</div>
     </div>
-    <div class="sentence" id="sentenceEl"></div>
-    <div class="hint"     id="hintEl"></div>
-    <div class="choices"  id="choicesEl"></div>
-  </div>
 
-  <div class="result-card hidden" id="resultCard">
-    <div class="result-header" id="resultHeader"></div>
-    <div class="answer-box">
-      <div class="answer-phrase" id="answerPhrase"></div>
-      <div class="answer-role"   id="answerRole"></div>
+    <div class="stats">
+      <div class="stat s-total"><div class="stat-num" id="totalNum">0</div><div class="stat-label">問題数</div></div>
+      <div class="stat s-ok">  <div class="stat-num" id="okNum">0</div>  <div class="stat-label">正解</div></div>
+      <div class="stat s-ng">  <div class="stat-num" id="ngNum">0</div>  <div class="stat-label">不正解</div></div>
+      <div class="stat s-rate"><div class="stat-num" id="rateNum">-</div><div class="stat-label">正答率</div></div>
     </div>
-    <hr class="divider">
-    <div class="result-jp" id="resultJp"></div>
-    <div class="result-en" id="resultEn"></div>
+
+    <div class="loading" id="loading">
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      <span>問題を読み込み中...</span>
+    </div>
+
+    <div class="card hidden" id="quizCard">
+      <div class="card-tag">
+        <span class="tag-quiz">🇬🇧 穴埋めクイズ</span>
+        <span class="q-num" id="qNum">Q1</span>
+      </div>
+      <div class="sentence" id="sentenceEl"></div>
+      <div class="hint"     id="hintEl"></div>
+      <div class="choices"  id="choicesEl"></div>
+    </div>
+
+    <div class="result-card hidden" id="resultCard">
+      <div class="result-header" id="resultHeader"></div>
+      <div class="answer-box">
+        <div class="answer-phrase" id="answerPhrase"></div>
+        <div class="answer-role"   id="answerRole"></div>
+      </div>
+      <hr class="divider">
+      <div class="result-jp" id="resultJp"></div>
+      <div class="result-en" id="resultEn"></div>
+    </div>
+
+    <button class="next-btn hidden" id="nextBtn" onclick="nextQuiz()">次の問題へ →</button>
   </div>
 
-  <button class="next-btn hidden" id="nextBtn" onclick="nextQuiz()">次の問題へ →</button>
+  <div id="finalResultScreen" class="card hidden">
+    <div class="final-result">
+      <div class="tag-quiz" style="display:inline-block">MISSION COMPLETE</div>
+      <h2 style="margin-top:20px">お疲れ様でした！</h2>
+      <div class="final-score" id="finalScore">0 / 5</div>
+      <p style="color:var(--text-dim)">5問中、何問正解できたかな？</p>
+      <div class="streak-badge" style="display:inline-block; margin-top:20px; font-size:18px">累計 🔥 <span id="finalStreakNum">0</span> 連続正解中</div>
+      <button class="next-btn" style="margin-top:30px" onclick="liff.closeWindow()">クイズを終了する</button>
+    </div>
+  </div>
 
 </div>
 
 <script>
-  // ★スプレッドシートのCSV公開URL
   const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQnCTkmh0HSb-kfodK4N492cJPBdy99ONO4lqoMw2erSgVJtAWsGsdNTp_G0nUCuvHjvyACDfSUeK1s/pub?gid=0&single=true&output=csv';
-
-  // ★LIFF ID
   const LIFF_ID = '2009654666-bNmDrrps';
-
-  // ★Apps ScriptのWebアプリURL
   const GAS_URL = 'https://script.google.com/macros/s/AKfycbw1ikdvPiZwy4NsCspTnaaJUi-sxuTtzwDd8XBNmWySvorkfrOHw4DwGn7650GsOznj/exec';
 
   const HISTORY_SIZE = 15;
@@ -212,96 +226,70 @@
 
   let allPhrases = [];
   let stats      = { total: 0, ok: 0, ng: 0 };
+  let quizCountInSession = 0; // 5問カウント用
   let current    = null;
   let userId     = null;
   let streak     = 0;
 
-  // ========== 初期化 ==========
   window.onload = async () => {
     show('loading');
-
     try {
       await liff.init({ liffId: LIFF_ID });
       if (liff.isLoggedIn()) {
         const profile = await liff.getProfile();
         userId = profile.userId;
       }
-    } catch(e) {
-      console.log('LIFF init:', e);
-    }
+    } catch(e) { console.log('LIFF init:', e); }
 
-    await Promise.all([
-      loadPhrases(),
-      loadStreak()
-    ]);
-
+    await Promise.all([loadPhrases(), fetchStreak()]);
     showQuiz();
   };
 
-  // ========== CSVからデータ読み込み ==========
   async function loadPhrases() {
     try {
       const res  = await fetch(CSV_URL + '&cachebust=' + Date.now());
       const text = await res.text();
       allPhrases = parseCSV(text);
     } catch(e) {
-      try {
-        const proxy = 'https://corsproxy.io/?' + encodeURIComponent(CSV_URL);
-        const res2  = await fetch(proxy);
-        const text2 = await res2.text();
-        allPhrases  = parseCSV(text2);
-      } catch(e2) {
-        document.getElementById('loading').innerHTML = '⚠️ データ読み込みエラー';
-      }
+      document.getElementById('loading').innerHTML = '⚠️ データ読み込みエラー';
     }
   }
 
-  // ========== Apps Scriptから連続正解数を取得 ==========
- async function loadStreak() {
-  if (!userId) return;
-  return new Promise(resolve => {
-    const url = `${GAS_URL}?action=getStreak&userId=${encodeURIComponent(userId)}&cachebust=${Date.now()}`;
-    const img = new Image();
-    img.onload = img.onerror = resolve;
-    img.src = url;
-  });
-}
-
-  // ========== Apps Scriptに連続正解数を保存 ==========
-  async function saveStreakToGAS(isCorrect) {
-  if (!userId) {
-    streak = isCorrect ? streak + 1 : 0;
-    updateStreakBadge();
-    return;
+  // 最初のみGASからデータを取得
+  async function fetchStreak() {
+    if (!userId) return;
+    try {
+      const response = await fetch(`${GAS_URL}?action=getStreak&userId=${encodeURIComponent(userId)}`);
+      const data = await response.json();
+      streak = data.streak;
+      updateStreakBadge();
+    } catch(e) { console.error(e); }
   }
-  return new Promise(resolve => {
-    const url = `${GAS_URL}?action=saveStreak&userId=${encodeURIComponent(userId)}&isCorrect=${isCorrect}&cachebust=${Date.now()}`;
-    const img = new Image();
-    img.onload = img.onerror = () => {
+
+  async function saveStreakToGAS(isCorrect) {
+    if (!userId) {
       streak = isCorrect ? streak + 1 : 0;
       updateStreakBadge();
-      resolve();
-    };
-    img.src = url;
-  });
-}
+      return;
+    }
+    try {
+      // GAS側で保存して最新のstreakを受け取る
+      const response = await fetch(`${GAS_URL}?action=saveStreak&userId=${encodeURIComponent(userId)}&isCorrect=${isCorrect}`);
+      const data = await response.json();
+      streak = data.streak;
+      updateStreakBadge();
+    } catch(e) {
+      streak = isCorrect ? streak + 1 : 0;
+      updateStreakBadge();
+    }
+  }
 
-  // CSVパース（ダブルクォート対応）
   function parseCSV(text) {
     const lines = text.trim().split('\n');
-    return lines
-      .map((line, i) => {
-        const cols = splitCSVLine(line);
-        return {
-          rowNum      : i + 1,
-          phrase      : cols[0] || '',
-          role        : cols[1] || '',
-          translation : cols[2] || '',
-          sentence    : cols[3] || '',
-          group       : cols[4] || '',
-        };
-      })
-      .filter(r => r.phrase && r.sentence);
+    return lines.map((line, i) => {
+      const cols = splitCSVLine(line);
+      return { rowNum: i + 1, phrase: cols[0], role: cols[1], translation: cols[2], sentence: cols[3], group: cols[4] };
+    }).filter(r => r.phrase && r.sentence);
   }
 
   function splitCSVLine(line) {
@@ -317,27 +305,28 @@
     return result;
   }
 
-  // ========== 問題表示 ==========
   function showQuiz() {
+    if (quizCountInSession >= 5) {
+      showFinalResult();
+      return;
+    }
+
     hide('quizCard');
     hide('resultCard');
     hide('nextBtn');
 
     const history = getHistory();
     let available = allPhrases.filter(p => !history.includes(p.rowNum));
-    if (available.length === 0) {
-      clearHistory();
-      available = [...allPhrases];
-    }
+    if (available.length === 0) { clearHistory(); available = [...allPhrases]; }
 
     current = available[Math.floor(Math.random() * available.length)];
     addHistory(current.rowNum);
 
-    document.getElementById('qNum').textContent = `Q${stats.total + 1}`;
+    quizCountInSession++;
+    document.getElementById('qNum').textContent = `Step ${quizCountInSession} / 5`;
 
     const quizSentence = makeBlankSentence(current.phrase, current.sentence);
-    const sentenceHtml = quizSentence.replace('(  )', '<span class="blank">(  )</span>');
-    document.getElementById('sentenceEl').innerHTML = sentenceHtml;
+    document.getElementById('sentenceEl').innerHTML = quizSentence.replace('(  )', '<span class="blank">(  )</span>');
     document.getElementById('hintEl').innerHTML = `<span>📝</span><span>${current.translation}</span>`;
 
     const choices = makeChoices(current.phrase, current.group);
@@ -355,14 +344,12 @@
     show('quizCard');
   }
 
-  // ========== 回答処理 ==========
   async function answer(selected, clickedBtn) {
     document.querySelectorAll('.choice').forEach(b => b.disabled = true);
-
     const isCorrect = selected === current.phrase;
 
     document.querySelectorAll('.choice').forEach(btn => {
-      const phrase = btn.textContent.replace(/^[123]/, '').trim();
+      const phrase = btn.innerText.replace(/^[1-3]/, '').trim();
       if (phrase === current.phrase) {
         btn.classList.add(btn === clickedBtn ? 'correct' : 'reveal');
       } else if (btn === clickedBtn) {
@@ -371,47 +358,58 @@
     });
 
     stats.total++;
-    if (isCorrect) stats.ok++;
-    else           stats.ng++;
+    if (isCorrect) stats.ok++; else stats.ng++;
     updateStats();
 
+    // GASに保存（同期的に待機）
     await saveStreakToGAS(isCorrect);
 
-    document.getElementById('resultHeader').className   = `result-header ${isCorrect ? 'ok' : 'ng'}`;
+    document.getElementById('resultHeader').className = `result-header ${isCorrect ? 'ok' : 'ng'}`;
     document.getElementById('resultHeader').textContent = isCorrect ? '✅ Correct！' : '❌ Incorrect';
     document.getElementById('answerPhrase').textContent = current.phrase;
-    document.getElementById('answerRole').textContent   = '役割：' + current.role;
-    document.getElementById('resultJp').textContent     = '🇯🇵 ' + current.translation;
-    document.getElementById('resultEn').textContent     = '🇬🇧 ' + current.sentence;
+    document.getElementById('answerRole').textContent = '役割：' + current.role;
+    document.getElementById('resultJp').textContent = '🇯🇵 ' + current.translation;
+    document.getElementById('resultEn').textContent = '🇬🇧 ' + current.sentence;
 
+    const nextBtn = document.getElementById('nextBtn');
+    nextBtn.textContent = quizCountInSession >= 5 ? '結果を確認する →' : '次の問題へ →';
+    
     show('resultCard');
     show('nextBtn');
   }
 
   function nextQuiz() {
-    show('loading');
-    setTimeout(() => showQuiz(), 100);
+    if (quizCountInSession >= 5) {
+      showFinalResult();
+    } else {
+      show('loading');
+      setTimeout(() => showQuiz(), 100);
+    }
   }
 
-  // ========== 履歴管理（localStorage）==========
-  function getHistory() {
-    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
-    catch { return []; }
+  function showFinalResult() {
+    hide('gameContainer');
+    document.getElementById('finalScore').textContent = `${stats.ok} / 5`;
+    document.getElementById('finalStreakNum').textContent = streak;
+    show('finalResultScreen');
   }
+
+  function updateStreakBadge() {
+    document.getElementById('streakNum').textContent = streak;
+  }
+
+  function getHistory() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch { return []; } }
   function addHistory(rowNum) {
-    let h = getHistory();
-    h.push(rowNum);
+    let h = getHistory(); h.push(rowNum);
     if (h.length > HISTORY_SIZE) h.shift();
     localStorage.setItem(STORAGE_KEY, JSON.stringify(h));
   }
   function clearHistory() { localStorage.removeItem(STORAGE_KEY); }
 
-  // ========== 穴埋め生成 ==========
   function makeBlankSentence(phrase, sentence) {
     const clean = phrase.replace(/[~〜（(）)]/g, '').replace(/（.+?）/g, '').trim();
     const exact = new RegExp(escapeRegExp(clean), 'i');
     if (exact.test(sentence)) return sentence.replace(exact, '(  )');
-
     const first2 = clean.split(/\s+/).slice(0, 2).join('\\s+');
     if (first2) {
       const partial = new RegExp(first2 + '[\\w\\s\']*?(?=\\s|,|\\.|$)', 'i');
@@ -420,20 +418,18 @@
     return `(  ) → ${sentence}`;
   }
 
-  // ========== 選択肢生成 ==========
   function makeChoices(correctPhrase, groupName) {
-    const same  = shuffle(allPhrases.filter(p => p.group === groupName && p.phrase !== correctPhrase)).map(p => p.phrase);
+    const same = shuffle(allPhrases.filter(p => p.group === groupName && p.phrase !== correctPhrase)).map(p => p.phrase);
     const other = shuffle(allPhrases.filter(p => p.group !== groupName && p.phrase !== correctPhrase)).map(p => p.phrase);
     const dummies = [...same, ...other].slice(0, 2);
     return shuffle([correctPhrase, ...dummies]);
   }
 
-  // ========== ユーティリティ ==========
   function updateStats() {
-    document.getElementById('totalNum').textContent  = stats.total;
-    document.getElementById('okNum').textContent     = stats.ok;
-    document.getElementById('ngNum').textContent     = stats.ng;
-    document.getElementById('rateNum').textContent   = stats.total > 0 ? Math.round(stats.ok / stats.total * 100) + '%' : '-';
+    document.getElementById('totalNum').textContent = stats.total;
+    document.getElementById('okNum').textContent = stats.ok;
+    document.getElementById('ngNum').textContent = stats.ng;
+    document.getElementById('rateNum').textContent = stats.total > 0 ? Math.round(stats.ok / stats.total * 100) + '%' : '-';
   }
 
   function shuffle(array) {
