@@ -408,39 +408,32 @@
 
 function makeBlankSentence(phrase, sentence) {
   const clean = phrase
-    .replace(/[~〜（(）)（）]/g, '')
-    .replace(/[（(][^）)]*[）)]/g, '')
+    .replace(/\s*[\(（][^\)）]*[\)）]/g, '')
+    .replace(/[~〜～]/g, '')
     .replace(/[　\s]+/g, ' ')
     .trim();
 
-  // ① そのまま完全一致
+  // ① 完全一致
   const exact = new RegExp(escapeRegExp(clean), 'i');
   if (exact.test(sentence)) return sentence.replace(exact, '(  )');
 
-  // ② 先頭単語の語幹で検索（ed/ing/s/es/d/er/est などの変化形に対応）
+  // ② 各単語を語幹化して柔軟にマッチ
   const words = clean.split(/\s+/);
-  const stem  = words[0].replace(/(ing|ed|er|est|es|s|d)$/i, '');
+  const stemWord = w => w.replace(/(ling|ing|tion|ed|er|est|es|s|d|e)$/i, '');
 
-  if (stem.length >= 3) {
-    // 先頭単語が変化している場合
-    const stemRegex = new RegExp(
-      escapeRegExp(stem) + '[a-z]*' +
-      (words.length > 1 ? '\\s+' + words.slice(1).map(escapeRegExp).join('\\s+[a-z]*\\s*') : ''),
-      'i'
-    );
-    if (stemRegex.test(sentence)) return sentence.replace(stemRegex, '(  )');
+  // 全単語を語幹化したパターンで検索
+  const stemPattern = words
+    .map(w => escapeRegExp(stemWord(w)) + '[a-z]*')
+    .join('\\s+');
+  const stemRegex = new RegExp(stemPattern, 'i');
+  if (stemRegex.test(sentence)) return sentence.replace(stemRegex, '(  )');
+
+  // ③ 先頭1単語の語幹のみでフォールバック
+  const firstStem = stemWord(words[0]);
+  if (firstStem.length >= 3) {
+    const firstRegex = new RegExp(escapeRegExp(firstStem) + '[a-z]*', 'i');
+    if (firstRegex.test(sentence)) return sentence.replace(firstRegex, '(  )');
   }
-
-  // ③ 先頭2単語でフォールバック
-  if (words.length >= 2) {
-    const first2 = words.slice(0, 2).map(escapeRegExp).join('[a-z]*\\s+');
-    const partial = new RegExp(first2 + '[a-z]*[^.!?]*?(?=\\s|,|\\.|$)', 'i');
-    if (partial.test(sentence)) return sentence.replace(partial, '(  )');
-  }
-
-  // ④ 先頭1単語のみでフォールバック
-  const firstWord = new RegExp(escapeRegExp(stem) + '[a-z]*', 'i');
-  if (firstWord.test(sentence)) return sentence.replace(firstWord, '(  )');
 
   return `(  ) → ${sentence}`;
 }
