@@ -106,12 +106,6 @@
   .choice.correct .choice-num { background: var(--correct); color: #000; }
   .choice.wrong   .choice-num { background: var(--wrong);   color: #fff; }
 
-  /* 終了時リザルト画面用スタイル */
-  .final-result {
-    text-align: center; padding: 40px 20px;
-  }
-  .final-score { font-size: 48px; font-weight: 800; color: var(--green); margin: 10px 0; font-family: 'Space Mono', monospace;}
-
   .result-card {
     background: var(--surface); border-radius: 20px; padding: 20px 18px;
     border: 1px solid var(--border); animation: fadeUp 0.3s ease;
@@ -127,6 +121,32 @@
   .divider       { border: none; border-top: 1px solid var(--border); }
   .result-jp     { font-size: 14px; line-height: 1.75; color: var(--text-dim); }
   .result-en     { font-size: 14px; line-height: 1.75; color: #a0b4cc; word-break: break-word; }
+
+  /* 音声読み上げボタン */
+  .speak-btn {
+    background: rgba(6,199,85,0.1);
+    border: 1px solid rgba(6,199,85,0.3);
+    border-radius: 10px;
+    padding: 10px 16px;
+    color: var(--green);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    width: 100%;
+    font-family: 'Noto Sans JP', sans-serif;
+    transition: all 0.15s ease;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .speak-btn:active { opacity: 0.7; transform: scale(0.98); }
+  .speak-btn.speaking {
+    background: rgba(6,199,85,0.2);
+    border-color: var(--green);
+  }
+
+  /* 終了時リザルト画面 */
+  .final-result { text-align: center; padding: 40px 20px; }
+  .final-score { font-size: 48px; font-weight: 800; color: var(--green); margin: 10px 0; font-family: 'Space Mono', monospace; }
 
   .next-btn {
     background: var(--green); color: #fff; border: none; border-radius: 16px;
@@ -198,6 +218,7 @@
       <hr class="divider">
       <div class="result-jp" id="resultJp"></div>
       <div class="result-en" id="resultEn"></div>
+      <button class="speak-btn" id="speakBtn" onclick="speakSentence()">🔊 英文を読み上げる</button>
     </div>
 
     <button class="next-btn hidden" id="nextBtn" onclick="nextQuiz()">次の問題へ →</button>
@@ -226,7 +247,7 @@
 
   let allPhrases = [];
   let stats      = { total: 0, ok: 0, ng: 0 };
-  let quizCountInSession = 0; // 5問カウント用
+  let quizCountInSession = 0;
   let current    = null;
   let userId     = null;
   let streak     = 0;
@@ -255,7 +276,6 @@
     }
   }
 
-  // 最初のみGASからデータを取得
   async function fetchStreak() {
     if (!userId) return;
     try {
@@ -273,7 +293,6 @@
       return;
     }
     try {
-      // GAS側で保存して最新のstreakを受け取る
       const response = await fetch(`${GAS_URL}?action=saveStreak&userId=${encodeURIComponent(userId)}&isCorrect=${isCorrect}`);
       const data = await response.json();
       streak = data.streak;
@@ -314,6 +333,9 @@
     hide('quizCard');
     hide('resultCard');
     hide('nextBtn');
+
+    // 読み上げを停止
+    window.speechSynthesis.cancel();
 
     const history = getHistory();
     let available = allPhrases.filter(p => !history.includes(p.rowNum));
@@ -361,21 +383,54 @@
     if (isCorrect) stats.ok++; else stats.ng++;
     updateStats();
 
-    // GASに保存（同期的に待機）
     await saveStreakToGAS(isCorrect);
 
-    document.getElementById('resultHeader').className = `result-header ${isCorrect ? 'ok' : 'ng'}`;
+    document.getElementById('resultHeader').className   = `result-header ${isCorrect ? 'ok' : 'ng'}`;
     document.getElementById('resultHeader').textContent = isCorrect ? '✅ Correct！' : '❌ Incorrect';
     document.getElementById('answerPhrase').textContent = current.phrase;
-    document.getElementById('answerRole').textContent = '役割：' + current.role;
-    document.getElementById('resultJp').textContent = '🇯🇵 ' + current.translation;
-    document.getElementById('resultEn').textContent = '🇬🇧 ' + current.sentence;
+    document.getElementById('answerRole').textContent   = '役割：' + current.role;
+    document.getElementById('resultJp').textContent     = '🇯🇵 ' + current.translation;
+    document.getElementById('resultEn').textContent     = '🇬🇧 ' + current.sentence;
+
+    // 読み上げボタンをリセット
+    const speakBtn = document.getElementById('speakBtn');
+    speakBtn.textContent = '🔊 英文を読み上げる';
+    speakBtn.classList.remove('speaking');
 
     const nextBtn = document.getElementById('nextBtn');
     nextBtn.textContent = quizCountInSession >= 5 ? '結果を確認する →' : '次の問題へ →';
-    
+
     show('resultCard');
     show('nextBtn');
+  }
+
+  // ========== 音声読み上げ ==========
+  function speakSentence() {
+    if (!current) return;
+    const btn = document.getElementById('speakBtn');
+
+    // 再生中なら停止
+    if (window.speechSynthesis.speaking) {
+      window.speechSynthesis.cancel();
+      btn.textContent = '🔊 英文を読み上げる';
+      btn.classList.remove('speaking');
+      return;
+    }
+
+    const utterance = new SpeechSynthesisUtterance(current.sentence);
+    utterance.lang  = 'en-US';
+    utterance.rate  = 0.9;
+
+    utterance.onstart = () => {
+      btn.textContent = '⏹ 停止する';
+      btn.classList.add('speaking');
+    };
+    utterance.onend = utterance.onerror = () => {
+      btn.textContent = '🔊 英文を読み上げる';
+      btn.classList.remove('speaking');
+    };
+
+    window.speechSynthesis.speak(utterance);
   }
 
   function nextQuiz() {
@@ -388,8 +443,9 @@
   }
 
   function showFinalResult() {
+    window.speechSynthesis.cancel();
     hide('gameContainer');
-    document.getElementById('finalScore').textContent = `${stats.ok} / 5`;
+    document.getElementById('finalScore').textContent    = `${stats.ok} / 5`;
     document.getElementById('finalStreakNum').textContent = streak;
     show('finalResultScreen');
   }
@@ -406,40 +462,39 @@
   }
   function clearHistory() { localStorage.removeItem(STORAGE_KEY); }
 
-function makeBlankSentence(phrase, sentence) {
-  const clean = phrase
-    .replace(/\s*[\(（][^\)）]*[\)）]/g, '')
-    .replace(/[~〜～]/g, '')
-    .replace(/[　\s]+/g, ' ')
-    .trim();
+  function makeBlankSentence(phrase, sentence) {
+    const clean = phrase
+      .replace(/\s*[\(（][^\)）]*[\)）]/g, '')
+      .replace(/[~〜～]/g, '')
+      .replace(/[　\s]+/g, ' ')
+      .trim();
 
-  // ① 完全一致
-  const exact = new RegExp(escapeRegExp(clean), 'i');
-  if (exact.test(sentence)) return sentence.replace(exact, '(  )');
+    // ① 完全一致
+    const exact = new RegExp(escapeRegExp(clean), 'i');
+    if (exact.test(sentence)) return sentence.replace(exact, '(  )');
 
-  // ② 各単語を語幹化して柔軟にマッチ
-  const words = clean.split(/\s+/);
-  const stemWord = w => w.replace(/(ling|ing|tion|ed|er|est|es|s|d|e)$/i, '');
+    // ② 各単語を語幹化して柔軟にマッチ
+    const words = clean.split(/\s+/);
+    const stemWord = w => w.replace(/(ling|ing|tion|ed|er|est|es|s|d|e)$/i, '');
 
-  // 全単語を語幹化したパターンで検索
-  const stemPattern = words
-    .map(w => escapeRegExp(stemWord(w)) + '[a-z]*')
-    .join('\\s+');
-  const stemRegex = new RegExp(stemPattern, 'i');
-  if (stemRegex.test(sentence)) return sentence.replace(stemRegex, '(  )');
+    const stemPattern = words
+      .map(w => escapeRegExp(stemWord(w)) + '[a-z]*')
+      .join('\\s+');
+    const stemRegex = new RegExp(stemPattern, 'i');
+    if (stemRegex.test(sentence)) return sentence.replace(stemRegex, '(  )');
 
-  // ③ 先頭1単語の語幹のみでフォールバック
-  const firstStem = stemWord(words[0]);
-  if (firstStem.length >= 3) {
-    const firstRegex = new RegExp(escapeRegExp(firstStem) + '[a-z]*', 'i');
-    if (firstRegex.test(sentence)) return sentence.replace(firstRegex, '(  )');
+    // ③ 先頭1単語の語幹のみでフォールバック
+    const firstStem = stemWord(words[0]);
+    if (firstStem.length >= 3) {
+      const firstRegex = new RegExp(escapeRegExp(firstStem) + '[a-z]*', 'i');
+      if (firstRegex.test(sentence)) return sentence.replace(firstRegex, '(  )');
+    }
+
+    return `(  ) → ${sentence}`;
   }
 
-  return `(  ) → ${sentence}`;
-}
-
   function makeChoices(correctPhrase, groupName) {
-    const same = shuffle(allPhrases.filter(p => p.group === groupName && p.phrase !== correctPhrase)).map(p => p.phrase);
+    const same  = shuffle(allPhrases.filter(p => p.group === groupName && p.phrase !== correctPhrase)).map(p => p.phrase);
     const other = shuffle(allPhrases.filter(p => p.group !== groupName && p.phrase !== correctPhrase)).map(p => p.phrase);
     const dummies = [...same, ...other].slice(0, 2);
     return shuffle([correctPhrase, ...dummies]);
@@ -447,9 +502,9 @@ function makeBlankSentence(phrase, sentence) {
 
   function updateStats() {
     document.getElementById('totalNum').textContent = stats.total;
-    document.getElementById('okNum').textContent = stats.ok;
-    document.getElementById('ngNum').textContent = stats.ng;
-    document.getElementById('rateNum').textContent = stats.total > 0 ? Math.round(stats.ok / stats.total * 100) + '%' : '-';
+    document.getElementById('okNum').textContent    = stats.ok;
+    document.getElementById('ngNum').textContent    = stats.ng;
+    document.getElementById('rateNum').textContent  = stats.total > 0 ? Math.round(stats.ok / stats.total * 100) + '%' : '-';
   }
 
   function shuffle(array) {
