@@ -4,12 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>英語フレーズクイズ</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <style>
   :root {
     --green: #06C755;
-    --green-dark: #05A847;
     --bg: #0f172a;
     --surface: #1e293b;
     --surface2: #273548;
@@ -19,6 +18,7 @@
     --correct: #2ed573;
     --wrong: #ff4757;
     --gold: #fbbf24;
+    --pink: #ff6b9d;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -31,26 +31,173 @@
     padding: 14px 16px 32px;
     background-image:
       radial-gradient(ellipse at 15% 0%, rgba(6,199,85,0.07) 0%, transparent 55%),
-      radial-gradient(ellipse at 85% 100%, rgba(6,199,85,0.05) 0%, transparent 55%);
+      radial-gradient(ellipse at 85% 100%, rgba(255,107,157,0.05) 0%, transparent 55%);
   }
 
   .wrap { width: 100%; display: flex; flex-direction: column; gap: 12px; }
 
+  /* ========== ペットカード ========== */
+  .pet-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 20px 18px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    position: relative;
+    overflow: hidden;
+  }
+  .pet-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--green), var(--pink), var(--gold));
+    border-radius: 24px 24px 0 0;
+  }
+
+  .pet-stage-name {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+
+  /* SVGキャラクター */
+  .pet-svg-wrap {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .pet-svg-wrap svg {
+    filter: drop-shadow(0 4px 12px rgba(6,199,85,0.2));
+  }
+  .pet-svg-wrap.bounce svg {
+    animation: petBounce 0.5s ease;
+  }
+  @keyframes petBounce {
+    0%, 100% { transform: translateY(0) scale(1); }
+    30% { transform: translateY(-12px) scale(1.05); }
+    60% { transform: translateY(-4px) scale(0.98); }
+  }
+  .pet-svg-wrap.levelup svg {
+    animation: levelUpAnim 0.8s ease;
+  }
+  @keyframes levelUpAnim {
+    0% { transform: scale(1); }
+    20% { transform: scale(1.3) rotate(-5deg); }
+    40% { transform: scale(1.3) rotate(5deg); }
+    60% { transform: scale(1.2) rotate(-3deg); }
+    80% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+  }
+  .pet-svg-wrap.dead svg {
+    filter: grayscale(1) opacity(0.5);
+  }
+
+  /* うんちオーバーレイ */
+  .unchi-overlay {
+    position: absolute;
+    bottom: 0; right: 0;
+    display: flex;
+    gap: 2px;
+    font-size: 18px;
+  }
+
+  /* ステータスバー */
+  .pet-status-row {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .pet-exp-wrap {
+    flex: 1;
+  }
+  .pet-exp-label {
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .pet-exp-bar-bg {
+    height: 6px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .pet-exp-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--green), #00e5ff);
+    border-radius: 10px;
+    transition: width 0.6s ease;
+  }
+  .pet-streak {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--gold);
+    background: rgba(251,191,36,0.1);
+    border: 1px solid rgba(251,191,36,0.2);
+    border-radius: 20px;
+    padding: 4px 10px;
+    white-space: nowrap;
+  }
+
+  /* メッセージ吹き出し */
+  .pet-bubble {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 8px 14px;
+    font-size: 13px;
+    color: var(--text);
+    text-align: center;
+    min-height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    transition: all 0.3s ease;
+  }
+
+  /* 復活ボタン */
+  .revive-btn {
+    background: linear-gradient(135deg, #ff4757, #ff6b9d);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 10px 20px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Noto Sans JP', sans-serif;
+    -webkit-appearance: none;
+  }
+
+  /* ========== 統計 ========== */
   .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
   .stat {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 14px;
-    padding: 12px 6px;
+    padding: 10px 4px;
     text-align: center;
   }
-  .stat-num { font-size: 24px; font-weight: 700; font-family: 'Space Mono', monospace; line-height: 1; }
-  .stat-label { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+  .stat-num { font-size: 22px; font-weight: 700; font-family: 'Space Mono', monospace; line-height: 1; }
+  .stat-label { font-size: 10px; color: var(--text-dim); margin-top: 3px; }
   .s-total .stat-num { color: var(--text); }
   .s-ok    .stat-num { color: var(--correct); }
   .s-ng    .stat-num { color: var(--wrong); }
   .s-rate  .stat-num { color: var(--gold); }
 
+  /* ========== クイズ ========== */
   .card {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -74,92 +221,75 @@
   .q-num { margin-left: auto; font-size: 13px; color: var(--text-dim); font-family: 'Space Mono', monospace; }
 
   .sentence {
-    font-size: 18px; line-height: 1.85; color: #c7d9f5;
+    font-size: 17px; line-height: 1.85; color: #c7d9f5;
     background: rgba(255,255,255,0.03); border-radius: 14px;
-    padding: 16px 18px; border: 1px solid var(--border); word-break: break-word;
+    padding: 14px 16px; border: 1px solid var(--border); word-break: break-word;
   }
   .blank {
     display: inline-block; background: rgba(6,199,85,0.1);
-    border: 1.5px dashed var(--green); border-radius: 7px; padding: 2px 12px;
+    border: 1.5px dashed var(--green); border-radius: 7px; padding: 2px 10px;
     color: var(--green); font-family: 'Space Mono', monospace;
-    font-size: 15px; font-weight: 700; min-width: 70px; text-align: center;
+    font-size: 14px; font-weight: 700; min-width: 60px; text-align: center;
   }
-  .hint { font-size: 14px; color: var(--text-dim); display: flex; align-items: flex-start; gap: 6px; line-height: 1.65; }
+  .hint { font-size: 13px; color: var(--text-dim); display: flex; align-items: flex-start; gap: 6px; line-height: 1.65; }
 
   .choices { display: flex; flex-direction: column; gap: 10px; }
   .choice {
     background: var(--surface2); border: 1.5px solid var(--border); border-radius: 14px;
-    padding: 16px; cursor: pointer; font-size: 15px; font-family: 'Space Mono', monospace;
+    padding: 14px 16px; cursor: pointer; font-size: 14px; font-family: 'Space Mono', monospace;
     color: var(--text); text-align: left; display: flex; align-items: center; gap: 12px;
     transition: all 0.15s ease; width: 100%; line-height: 1.5; word-break: break-word;
     -webkit-appearance: none; appearance: none;
   }
-  .choice:active:not(:disabled) { transform: scale(0.98); background: rgba(6,199,85,0.06); }
+  .choice:active:not(:disabled) { transform: scale(0.98); }
   .choice:disabled { cursor: default; }
   .choice.correct { background: rgba(46,213,115,0.1); border-color: var(--correct); color: var(--correct); }
   .choice.wrong   { background: rgba(255,71,87,0.08); border-color: var(--wrong); color: var(--wrong); opacity: 0.7; }
   .choice.reveal  { background: rgba(46,213,115,0.06); border-color: rgba(46,213,115,0.3); color: var(--correct); }
   .choice-num {
-    width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,0.06);
-    display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0;
+    width: 26px; height: 26px; border-radius: 50%; background: rgba(255,255,255,0.06);
+    display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0;
   }
   .choice.correct .choice-num { background: var(--correct); color: #000; }
   .choice.wrong   .choice-num { background: var(--wrong);   color: #fff; }
 
   .result-card {
-    background: var(--surface); border-radius: 20px; padding: 20px 18px;
+    background: var(--surface); border-radius: 20px; padding: 18px 16px;
     border: 1px solid var(--border); animation: fadeUp 0.3s ease;
-    display: flex; flex-direction: column; gap: 14px;
+    display: flex; flex-direction: column; gap: 12px;
   }
-  .result-header { font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+  .result-header { font-size: 17px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
   .result-header.ok { color: var(--correct); }
   .result-header.ng { color: var(--wrong); }
 
-  .answer-box { background: rgba(6,199,85,0.07); border: 1px solid rgba(6,199,85,0.18); border-radius: 12px; padding: 14px 16px; }
-  .answer-phrase { font-family: 'Space Mono', monospace; font-size: 15px; font-weight: 700; color: var(--correct); word-break: break-word; }
-  .answer-role   { font-size: 13px; color: var(--text-dim); margin-top: 4px; }
+  .answer-box { background: rgba(6,199,85,0.07); border: 1px solid rgba(6,199,85,0.18); border-radius: 12px; padding: 12px 14px; }
+  .answer-phrase { font-family: 'Space Mono', monospace; font-size: 14px; font-weight: 700; color: var(--correct); word-break: break-word; }
+  .answer-role   { font-size: 12px; color: var(--text-dim); margin-top: 3px; }
   .divider       { border: none; border-top: 1px solid var(--border); }
-  .result-jp     { font-size: 14px; line-height: 1.75; color: var(--text-dim); }
-  .result-en     { font-size: 14px; line-height: 1.75; color: #a0b4cc; word-break: break-word; }
+  .result-jp     { font-size: 13px; line-height: 1.75; color: var(--text-dim); }
+  .result-en     { font-size: 13px; line-height: 1.75; color: #a0b4cc; word-break: break-word; }
 
-  /* 音声読み上げボタン */
   .speak-btn {
-    background: rgba(6,199,85,0.1);
-    border: 1px solid rgba(6,199,85,0.3);
-    border-radius: 10px;
-    padding: 10px 16px;
-    color: var(--green);
-    font-size: 14px;
-    font-weight: 700;
-    cursor: pointer;
-    width: 100%;
-    font-family: 'Noto Sans JP', sans-serif;
+    background: rgba(6,199,85,0.1); border: 1px solid rgba(6,199,85,0.3);
+    border-radius: 10px; padding: 10px 16px; color: var(--green);
+    font-size: 13px; font-weight: 700; cursor: pointer; width: 100%;
+    font-family: 'Noto Sans JP', sans-serif; -webkit-appearance: none; appearance: none;
     transition: all 0.15s ease;
-    -webkit-appearance: none;
-    appearance: none;
   }
-  .speak-btn:active { opacity: 0.7; transform: scale(0.98); }
-  .speak-btn.speaking {
-    background: rgba(6,199,85,0.2);
-    border-color: var(--green);
-  }
-
-  /* 終了時リザルト画面 */
-  .final-result { text-align: center; padding: 40px 20px; }
-  .final-score { font-size: 48px; font-weight: 800; color: var(--green); margin: 10px 0; font-family: 'Space Mono', monospace; }
+  .speak-btn.speaking { background: rgba(6,199,85,0.2); border-color: var(--green); }
 
   .next-btn {
     background: var(--green); color: #fff; border: none; border-radius: 16px;
-    padding: 18px; font-size: 16px; font-weight: 700; cursor: pointer;
+    padding: 16px; font-size: 15px; font-weight: 700; cursor: pointer;
     font-family: 'Noto Sans JP', sans-serif; transition: all 0.15s ease;
     box-shadow: 0 4px 14px rgba(6,199,85,0.3); width: 100%;
     -webkit-appearance: none; appearance: none;
   }
-  .next-btn:active { transform: scale(0.98); box-shadow: 0 2px 8px rgba(6,199,85,0.2); }
+  .next-btn:active { transform: scale(0.98); }
 
   .loading {
     display: flex; align-items: center; justify-content: center;
-    gap: 8px; padding: 60px 20px; color: var(--text-dim); font-size: 15px;
+    gap: 8px; padding: 50px 20px; color: var(--text-dim); font-size: 14px;
   }
   .dot { width: 8px; height: 8px; background: var(--green); border-radius: 50%; animation: bounce 1.2s infinite; }
   .dot:nth-child(2) { animation-delay: 0.2s; }
@@ -171,73 +301,107 @@
 
   .hidden { display: none !important; }
 
-  .streak-bar { display: flex; align-items: center; justify-content: flex-end; }
-  .streak-badge {
-    font-size: 13px; font-weight: 700; color: var(--gold);
-    background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.2);
-    border-radius: 20px; padding: 5px 14px;
+  /* 最終リザルト */
+  .final-result { text-align: center; padding: 30px 16px; }
+  .final-score  { font-size: 52px; font-weight: 900; color: var(--green); margin: 10px 0; font-family: 'Space Mono', monospace; }
+
+  /* レベルアップ演出 */
+  .levelup-banner {
+    background: linear-gradient(135deg, rgba(251,191,36,0.15), rgba(6,199,85,0.15));
+    border: 1px solid var(--gold);
+    border-radius: 14px;
+    padding: 12px;
+    text-align: center;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--gold);
+    animation: fadeUp 0.4s ease;
   }
 </style>
 </head>
 <body>
 <div class="wrap">
 
-  <div id="gameContainer">
-    <div class="streak-bar">
-      <div class="streak-badge">🔥 <span id="streakNum">0</span> 連続正解</div>
+  <!-- ========== ペットカード ========== -->
+  <div class="pet-card" id="petCard">
+    <div class="pet-stage-name" id="petStageName">たまご</div>
+    <div class="pet-svg-wrap" id="petSvgWrap">
+      <!-- SVGはJSで差し替え -->
     </div>
-
-    <div class="stats">
-      <div class="stat s-total"><div class="stat-num" id="totalNum">0</div><div class="stat-label">問題数</div></div>
-      <div class="stat s-ok">  <div class="stat-num" id="okNum">0</div>  <div class="stat-label">正解</div></div>
-      <div class="stat s-ng">  <div class="stat-num" id="ngNum">0</div>  <div class="stat-label">不正解</div></div>
-      <div class="stat s-rate"><div class="stat-num" id="rateNum">-</div><div class="stat-label">正答率</div></div>
-    </div>
-
-    <div class="loading" id="loading">
-      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
-      <span>問題を読み込み中...</span>
-    </div>
-
-    <div class="card hidden" id="quizCard">
-      <div class="card-tag">
-        <span class="tag-quiz">🇬🇧 穴埋めクイズ</span>
-        <span class="q-num" id="qNum">Q1</span>
+    <div class="pet-status-row">
+      <div class="pet-exp-wrap">
+        <div class="pet-exp-label">
+          <span>経験値</span>
+          <span id="expLabel">0 / 10</span>
+        </div>
+        <div class="pet-exp-bar-bg">
+          <div class="pet-exp-bar-fill" id="expBarFill" style="width:0%"></div>
+        </div>
       </div>
-      <div class="sentence" id="sentenceEl"></div>
-      <div class="hint"     id="hintEl"></div>
-      <div class="choices"  id="choicesEl"></div>
+      <div class="pet-streak">🔥 <span id="streakNum">0</span></div>
     </div>
-
-    <div class="result-card hidden" id="resultCard">
-      <div class="result-header" id="resultHeader"></div>
-      <div class="answer-box">
-        <div class="answer-phrase" id="answerPhrase"></div>
-        <div class="answer-role"   id="answerRole"></div>
-      </div>
-      <hr class="divider">
-      <div class="result-jp" id="resultJp"></div>
-      <div class="result-en" id="resultEn"></div>
-      <button class="speak-btn" id="speakBtn" onclick="speakSentence()">🔊 英文を読み上げる</button>
-    </div>
-
-    <button class="next-btn hidden" id="nextBtn" onclick="nextQuiz()">次の問題へ →</button>
+    <div class="pet-bubble" id="petBubble">クイズを始めよう！</div>
   </div>
 
+  <!-- レベルアップバナー -->
+  <div class="levelup-banner hidden" id="levelupBanner">🎉 レベルアップ！</div>
+
+  <!-- ========== 統計 ========== -->
+  <div class="stats" id="statsArea">
+    <div class="stat s-total"><div class="stat-num" id="totalNum">0</div><div class="stat-label">問題数</div></div>
+    <div class="stat s-ok">  <div class="stat-num" id="okNum">0</div>  <div class="stat-label">正解</div></div>
+    <div class="stat s-ng">  <div class="stat-num" id="ngNum">0</div>  <div class="stat-label">不正解</div></div>
+    <div class="stat s-rate"><div class="stat-num" id="rateNum">-</div><div class="stat-label">正答率</div></div>
+  </div>
+
+  <!-- ローディング -->
+  <div class="loading" id="loading">
+    <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+    <span>読み込み中...</span>
+  </div>
+
+  <!-- クイズカード -->
+  <div class="card hidden" id="quizCard">
+    <div class="card-tag">
+      <span class="tag-quiz">🇬🇧 穴埋めクイズ</span>
+      <span class="q-num" id="qNum">Step 1 / 5</span>
+    </div>
+    <div class="sentence" id="sentenceEl"></div>
+    <div class="hint"     id="hintEl"></div>
+    <div class="choices"  id="choicesEl"></div>
+  </div>
+
+  <!-- 1問ごとの結果 -->
+  <div class="result-card hidden" id="resultCard">
+    <div class="result-header" id="resultHeader"></div>
+    <div class="answer-box">
+      <div class="answer-phrase" id="answerPhrase"></div>
+      <div class="answer-role"   id="answerRole"></div>
+    </div>
+    <hr class="divider">
+    <div class="result-jp" id="resultJp"></div>
+    <div class="result-en" id="resultEn"></div>
+    <button class="speak-btn" id="speakBtn" onclick="speakSentence()">🔊 英文を読み上げる</button>
+  </div>
+
+  <button class="next-btn hidden" id="nextBtn" onclick="nextQuiz()">次の問題へ →</button>
+
+  <!-- 最終リザルト -->
   <div id="finalResultScreen" class="card hidden">
     <div class="final-result">
       <div class="tag-quiz" style="display:inline-block">MISSION COMPLETE</div>
-      <h2 style="margin-top:20px">お疲れ様でした！</h2>
+      <h2 style="margin-top:16px">お疲れ様でした！</h2>
       <div class="final-score" id="finalScore">0 / 5</div>
-      <p style="color:var(--text-dim)">5問中、何問正解できたかな？</p>
-      <div class="streak-badge" style="display:inline-block; margin-top:20px; font-size:18px">累計 🔥 <span id="finalStreakNum">0</span> 連続正解中</div>
-      <button class="next-btn" style="margin-top:30px" onclick="liff.closeWindow()">クイズを終了する</button>
+      <p style="color:var(--text-dim); font-size:13px">5問中の正解数</p>
+      <div style="margin-top:16px; font-size:14px; color:var(--text-dim)" id="finalPetMsg"></div>
+      <button class="next-btn" style="margin-top:24px" onclick="liff.closeWindow()">クイズを終了する</button>
     </div>
   </div>
 
 </div>
 
 <script>
+  // ★ここに実際の値を入れてください
   const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQnCTkmh0HSb-kfodK4N492cJPBdy99ONO4lqoMw2erSgVJtAWsGsdNTp_G0nUCuvHjvyACDfSUeK1s/pub?gid=0&single=true&output=csv';
   const LIFF_ID = '2009654666-bNmDrrps';
   const GAS_URL = 'https://script.google.com/macros/s/AKfycbw1ikdvPiZwy4NsCspTnaaJUi-sxuTtzwDd8XBNmWySvorkfrOHw4DwGn7650GsOznj/exec';
@@ -245,13 +409,24 @@
   const HISTORY_SIZE = 15;
   const STORAGE_KEY  = 'quiz_history';
 
-  let allPhrases = [];
-  let stats      = { total: 0, ok: 0, ng: 0 };
-  let quizCountInSession = 0;
-  let current    = null;
-  let userId     = null;
-  let streak     = 0;
+  // 成長段階定義
+  const STAGES = [
+    { name: 'たまご',     minCorrect: 0,  nextCorrect: 10, msg: 'もうすぐ孵化するよ！' },
+    { name: 'ひよこ',     minCorrect: 10, nextCorrect: 25, msg: 'すくすく育ってるよ！' },
+    { name: 'こどもっち', minCorrect: 25, nextCorrect: 45, msg: 'だんだん強くなってきた！' },
+    { name: 'にわとり',   minCorrect: 45, nextCorrect: 70, msg: 'もうりっぱなにわとりだ！' },
+    { name: 'おおとり',   minCorrect: 70, nextCorrect: 999, msg: '英語マスター！最高だ！' },
+  ];
 
+  let allPhrases         = [];
+  let stats              = { total: 0, ok: 0, ng: 0 };
+  let quizCountInSession = 0;
+  let sessionCorrect     = 0;
+  let current            = null;
+  let userId             = null;
+  let petStatus          = null;
+
+  // ========== 初期化 ==========
   window.onload = async () => {
     show('loading');
     try {
@@ -260,81 +435,260 @@
         const profile = await liff.getProfile();
         userId = profile.userId;
       }
-    } catch(e) { console.log('LIFF init:', e); }
+    } catch(e) { console.log('LIFF:', e); }
 
-    await Promise.all([loadPhrases(), fetchStreak()]);
-    showQuiz();
+    await Promise.all([loadPhrases(), loadPetStatus()]);
+    hide('loading');
+
+    if (petStatus && petStatus.isDead) {
+      showDeadScreen();
+    } else {
+      renderPet();
+      showQuiz();
+    }
   };
 
+  // ========== データ読み込み ==========
   async function loadPhrases() {
     try {
       const res  = await fetch(CSV_URL + '&cachebust=' + Date.now());
       const text = await res.text();
       allPhrases = parseCSV(text);
     } catch(e) {
-      document.getElementById('loading').innerHTML = '⚠️ データ読み込みエラー';
+      try {
+        const res2  = await fetch('https://corsproxy.io/?' + encodeURIComponent(CSV_URL));
+        const text2 = await res2.text();
+        allPhrases  = parseCSV(text2);
+      } catch(e2) {
+        document.getElementById('loading').innerHTML = '⚠️ データ読み込みエラー';
+      }
     }
   }
 
-  async function fetchStreak() {
+  async function loadPetStatus() {
+    if (!userId) {
+      petStatus = { totalCorrect: 0, stage: 0, stageName: 'たまご', unchi: 0, isDead: false, streak: 0 };
+      return;
+    }
+    try {
+      const res  = await fetch(`${GAS_URL}?action=getPetStatus&userId=${encodeURIComponent(userId)}`, { redirect: 'follow' });
+      petStatus  = await res.json();
+    } catch(e) {
+      petStatus = { totalCorrect: 0, stage: 0, stageName: 'たまご', unchi: 0, isDead: false, streak: 0 };
+    }
+  }
+
+  // ========== ペット描画 ==========
+  function renderPet() {
+    if (!petStatus) return;
+    const stage = petStatus.stage || 0;
+    const unchi = petStatus.unchi || 0;
+    const isDead = petStatus.isDead;
+
+    document.getElementById('petStageName').textContent = STAGES[stage].name;
+    document.getElementById('streakNum').textContent    = petStatus.streak || 0;
+
+    // SVG差し替え
+    const wrap = document.getElementById('petSvgWrap');
+    wrap.className = 'pet-svg-wrap' + (isDead ? ' dead' : '');
+    wrap.innerHTML = getPetSVG(stage, isDead) + getUnchiOverlay(unchi);
+
+    // 経験値バー
+    const stageData = STAGES[stage];
+    const nextStage = STAGES[Math.min(stage + 1, STAGES.length - 1)];
+    const curr = petStatus.totalCorrect - stageData.minCorrect;
+    const need = nextStage.minCorrect - stageData.minCorrect;
+    const pct  = stage >= STAGES.length - 1 ? 100 : Math.min(100, Math.floor((curr / need) * 100));
+    document.getElementById('expBarFill').style.width = pct + '%';
+    document.getElementById('expLabel').textContent   = stage >= STAGES.length - 1
+      ? 'MAX'
+      : `${petStatus.totalCorrect} / ${nextStage.minCorrect}`;
+
+    // 吹き出しメッセージ
+    let msg = STAGES[stage].msg;
+    if (isDead) msg = '💀 力尽きてしまった...';
+    else if (unchi >= 3) msg = '💩💩💩 もうダメかも...助けて！';
+    else if (unchi === 2) msg = '💩💩 お腹が苦しいよ〜';
+    else if (unchi === 1) msg = '💩 ちょっとお腹の調子が...';
+    document.getElementById('petBubble').textContent = msg;
+  }
+
+  function getUnchiOverlay(unchi) {
+    if (unchi <= 0) return '';
+    const emojis = Array(Math.min(unchi, 3)).fill('💩').join('');
+    return `<div class="unchi-overlay">${emojis}</div>`;
+  }
+
+  // ========== SVGキャラクター ==========
+  function getPetSVG(stage, isDead) {
+    if (isDead) return getDeadSVG();
+    switch(stage) {
+      case 0: return getEggSVG();
+      case 1: return getChickSVG(0.7);
+      case 2: return getChickSVG(0.85);
+      case 3: return getHenSVG();
+      case 4: return getEagleSVG();
+      default: return getChickSVG(0.7);
+    }
+  }
+
+  function getEggSVG() {
+    return `<svg width="90" height="110" viewBox="0 0 90 110" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="45" cy="60" rx="32" ry="42" fill="#f5f0e8" stroke="#d4c9a8" stroke-width="2"/>
+      <ellipse cx="45" cy="60" rx="26" ry="36" fill="none" stroke="rgba(212,201,168,0.4)" stroke-width="1" stroke-dasharray="4,4"/>
+      <ellipse cx="38" cy="48" rx="4" ry="6" fill="rgba(255,255,255,0.6)" transform="rotate(-20,38,48)"/>
+    </svg>`;
+  }
+
+  function getChickSVG(scale) {
+    const s = scale;
+    const w = Math.round(80 * s), h = Math.round(100 * s);
+    return `<svg width="${w}" height="${h}" viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg">
+      <!-- 体 -->
+      <ellipse cx="40" cy="58" rx="28" ry="30" fill="#FFD93D"/>
+      <!-- 頭 -->
+      <circle cx="40" cy="28" r="22" fill="#FFD93D"/>
+      <!-- くちばし -->
+      <polygon points="28,30 20,34 28,38" fill="#FF8C00"/>
+      <!-- 目 -->
+      <circle cx="36" cy="24" r="5" fill="#1a1a2e"/>
+      <circle cx="37" cy="23" r="2" fill="white"/>
+      <!-- ほっぺ（ピンク） -->
+      <ellipse cx="48" cy="33" rx="7" ry="5" fill="#ff6b9d" opacity="0.7"/>
+      <!-- 羽 -->
+      <ellipse cx="16" cy="60" rx="10" ry="14" fill="#FFC300" transform="rotate(-15,16,60)"/>
+      <ellipse cx="64" cy="60" rx="10" ry="14" fill="#FFC300" transform="rotate(15,64,60)"/>
+      <!-- 足 -->
+      <line x1="32" y1="86" x2="26" y2="96" stroke="#FF8C00" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="26" y1="96" x2="20" y2="100" stroke="#FF8C00" stroke-width="2" stroke-linecap="round"/>
+      <line x1="26" y1="96" x2="24" y2="102" stroke="#FF8C00" stroke-width="2" stroke-linecap="round"/>
+      <line x1="48" y1="86" x2="54" y2="96" stroke="#FF8C00" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="54" y1="96" x2="60" y2="100" stroke="#FF8C00" stroke-width="2" stroke-linecap="round"/>
+      <line x1="54" y1="96" x2="56" y2="102" stroke="#FF8C00" stroke-width="2" stroke-linecap="round"/>
+    </svg>`;
+  }
+
+  function getHenSVG() {
+    return `<svg width="90" height="110" viewBox="0 0 90 110" xmlns="http://www.w3.org/2000/svg">
+      <!-- とさか -->
+      <ellipse cx="38" cy="8" rx="6" ry="8" fill="#ff4757"/>
+      <ellipse cx="48" cy="6" rx="5" ry="7" fill="#ff4757"/>
+      <ellipse cx="57" cy="10" rx="5" ry="6" fill="#ff4757"/>
+      <!-- 体 -->
+      <ellipse cx="45" cy="68" rx="32" ry="34" fill="#FFD93D"/>
+      <!-- 頭 -->
+      <circle cx="45" cy="28" r="24" fill="#FFD93D"/>
+      <!-- くちばし -->
+      <polygon points="28,30 18,36 28,40" fill="#FF8C00"/>
+      <!-- 肉垂 -->
+      <ellipse cx="22" cy="44" rx="5" ry="7" fill="#ff4757"/>
+      <!-- 目 -->
+      <circle cx="40" cy="24" r="5" fill="#1a1a2e"/>
+      <circle cx="41" cy="23" r="2" fill="white"/>
+      <!-- ほっぺ -->
+      <ellipse cx="54" cy="34" rx="8" ry="6" fill="#ff6b9d" opacity="0.7"/>
+      <!-- 羽 -->
+      <ellipse cx="16" cy="68" rx="12" ry="18" fill="#FFC300" transform="rotate(-15,16,68)"/>
+      <ellipse cx="74" cy="68" rx="12" ry="18" fill="#FFC300" transform="rotate(15,74,68)"/>
+      <!-- 尾羽 -->
+      <ellipse cx="74" cy="55" rx="8" ry="18" fill="#FFC300" transform="rotate(35,74,55)"/>
+      <ellipse cx="78" cy="50" rx="6" ry="16" fill="#FFD93D" transform="rotate(45,78,50)"/>
+      <!-- 足 -->
+      <line x1="36" y1="98" x2="28" y2="108" stroke="#FF8C00" stroke-width="3" stroke-linecap="round"/>
+      <line x1="28" y1="108" x2="20" y2="112" stroke="#FF8C00" stroke-width="2.5"/>
+      <line x1="28" y1="108" x2="26" y2="114" stroke="#FF8C00" stroke-width="2.5"/>
+      <line x1="54" y1="98" x2="62" y2="108" stroke="#FF8C00" stroke-width="3" stroke-linecap="round"/>
+      <line x1="62" y1="108" x2="70" y2="112" stroke="#FF8C00" stroke-width="2.5"/>
+      <line x1="62" y1="108" x2="64" y2="114" stroke="#FF8C00" stroke-width="2.5"/>
+    </svg>`;
+  }
+
+  function getEagleSVG() {
+    return `<svg width="110" height="110" viewBox="0 0 110 110" xmlns="http://www.w3.org/2000/svg">
+      <!-- 翼（大きく広げた） -->
+      <ellipse cx="16" cy="55" rx="20" ry="10" fill="#8B6914" transform="rotate(-20,16,55)"/>
+      <ellipse cx="94" cy="55" rx="20" ry="10" fill="#8B6914" transform="rotate(20,94,55)"/>
+      <ellipse cx="8" cy="48" rx="14" ry="7" fill="#6B4F10" transform="rotate(-35,8,48)"/>
+      <ellipse cx="102" cy="48" rx="14" ry="7" fill="#6B4F10" transform="rotate(35,102,48)"/>
+      <!-- 体 -->
+      <ellipse cx="55" cy="68" rx="26" ry="28" fill="#8B6914"/>
+      <!-- 胸（白） -->
+      <ellipse cx="55" cy="72" rx="16" ry="20" fill="#f5f0e8"/>
+      <!-- 頭（白） -->
+      <circle cx="55" cy="30" r="20" fill="#f5f0e8"/>
+      <!-- くちばし（鷹） -->
+      <path d="M38,34 Q30,40 35,46 L42,42 Z" fill="#FF8C00"/>
+      <!-- 目 -->
+      <circle cx="50" cy="26" r="5" fill="#1a1a2e"/>
+      <circle cx="51" cy="25" r="2" fill="white"/>
+      <circle cx="50" cy="26" r="1" fill="#FFD93D"/>
+      <!-- 足 -->
+      <line x1="44" y1="94" x2="36" y2="104" stroke="#FF8C00" stroke-width="3"/>
+      <line x1="36" y1="104" x2="28" y2="108" stroke="#FF8C00" stroke-width="2.5"/>
+      <line x1="36" y1="104" x2="34" y2="110" stroke="#FF8C00" stroke-width="2.5"/>
+      <line x1="66" y1="94" x2="74" y2="104" stroke="#FF8C00" stroke-width="3"/>
+      <line x1="74" y1="104" x2="82" y2="108" stroke="#FF8C00" stroke-width="2.5"/>
+      <line x1="74" y1="104" x2="76" y2="110" stroke="#FF8C00" stroke-width="2.5"/>
+    </svg>`;
+  }
+
+  function getDeadSVG() {
+    return `<svg width="80" height="100" viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="40" cy="58" rx="28" ry="30" fill="#aaa"/>
+      <circle cx="40" cy="28" r="22" fill="#aaa"/>
+      <polygon points="28,30 20,34 28,38" fill="#888"/>
+      <!-- × 目 -->
+      <line x1="30" y1="20" x2="38" y2="28" stroke="#555" stroke-width="3" stroke-linecap="round"/>
+      <line x1="38" y1="20" x2="30" y2="28" stroke="#555" stroke-width="3" stroke-linecap="round"/>
+      <!-- 足（横たわる） -->
+      <line x1="32" y1="86" x2="16" y2="92" stroke="#888" stroke-width="2.5"/>
+      <line x1="48" y1="86" x2="64" y2="92" stroke="#888" stroke-width="2.5"/>
+      <!-- 魂 -->
+      <text x="52" y="20" font-size="18">👻</text>
+    </svg>`;
+  }
+
+  // ========== 死亡画面 ==========
+  function showDeadScreen() {
+    hide('statsArea');
+    document.getElementById('petBubble').textContent = '💀 力尽きてしまった...';
+    const wrap = document.getElementById('petSvgWrap');
+    wrap.className = 'pet-svg-wrap dead';
+    wrap.innerHTML = getDeadSVG();
+
+    // 復活ボタンを吹き出しの下に表示
+    const petCard = document.getElementById('petCard');
+    const reviveBtn = document.createElement('button');
+    reviveBtn.className = 'revive-btn';
+    reviveBtn.textContent = '💖 復活させる（リセット）';
+    reviveBtn.onclick = revivePet;
+    petCard.appendChild(reviveBtn);
+  }
+
+  async function revivePet() {
     if (!userId) return;
     try {
-      const response = await fetch(`${GAS_URL}?action=getStreak&userId=${encodeURIComponent(userId)}`);
-      const data = await response.json();
-      streak = data.streak;
-      updateStreakBadge();
-    } catch(e) { console.error(e); }
+      await fetch(`${GAS_URL}?action=revive&userId=${encodeURIComponent(userId)}`, { redirect: 'follow' });
+      petStatus.isDead = false;
+      petStatus.unchi  = 0;
+      petStatus.streak = 0;
+    } catch(e) { console.log(e); }
+
+    // 復活ボタン削除
+    document.querySelector('.revive-btn')?.remove();
+    show('statsArea');
+    renderPet();
+    showQuiz();
   }
 
-  async function saveStreakToGAS(isCorrect) {
-    if (!userId) {
-      streak = isCorrect ? streak + 1 : 0;
-      updateStreakBadge();
-      return;
-    }
-    try {
-      const response = await fetch(`${GAS_URL}?action=saveStreak&userId=${encodeURIComponent(userId)}&isCorrect=${isCorrect}`);
-      const data = await response.json();
-      streak = data.streak;
-      updateStreakBadge();
-    } catch(e) {
-      streak = isCorrect ? streak + 1 : 0;
-      updateStreakBadge();
-    }
-  }
-
-  function parseCSV(text) {
-    const lines = text.trim().split('\n');
-    return lines.map((line, i) => {
-      const cols = splitCSVLine(line);
-      return { rowNum: i + 1, phrase: cols[0], role: cols[1], translation: cols[2], sentence: cols[3], group: cols[4] };
-    }).filter(r => r.phrase && r.sentence);
-  }
-
-  function splitCSVLine(line) {
-    const result = [];
-    let cur = '', inQ = false;
-    for (let i = 0; i < line.length; i++) {
-      const c = line[i];
-      if (c === '"') { inQ = !inQ; continue; }
-      if (c === ',' && !inQ) { result.push(cur.trim()); cur = ''; continue; }
-      cur += c;
-    }
-    result.push(cur.trim());
-    return result;
-  }
-
+  // ========== クイズ表示 ==========
   function showQuiz() {
-    if (quizCountInSession >= 5) {
-      showFinalResult();
-      return;
-    }
+    if (quizCountInSession >= 5) { showFinalResult(); return; }
 
     hide('quizCard');
     hide('resultCard');
     hide('nextBtn');
-
-    // 読み上げを停止
+    hide('levelupBanner');
     window.speechSynthesis.cancel();
 
     const history = getHistory();
@@ -343,8 +697,8 @@
 
     current = available[Math.floor(Math.random() * available.length)];
     addHistory(current.rowNum);
-
     quizCountInSession++;
+
     document.getElementById('qNum').textContent = `Step ${quizCountInSession} / 5`;
 
     const quizSentence = makeBlankSentence(current.phrase, current.sentence);
@@ -352,38 +706,43 @@
     document.getElementById('hintEl').innerHTML = `<span>📝</span><span>${current.translation}</span>`;
 
     const choices = makeChoices(current.phrase, current.group);
-    const choicesEl = document.getElementById('choicesEl');
-    choicesEl.innerHTML = '';
+    const el = document.getElementById('choicesEl');
+    el.innerHTML = '';
     choices.forEach((c, i) => {
       const btn = document.createElement('button');
       btn.className = 'choice';
       btn.innerHTML = `<span class="choice-num">${i + 1}</span>${c}`;
       btn.onclick = () => answer(c, btn);
-      choicesEl.appendChild(btn);
+      el.appendChild(btn);
     });
 
-    hide('loading');
     show('quizCard');
   }
 
-  async function answer(selected, clickedBtn) {
+  // ========== 回答処理 ==========
+  function answer(selected, clickedBtn) {
     document.querySelectorAll('.choice').forEach(b => b.disabled = true);
     const isCorrect = selected === current.phrase;
 
     document.querySelectorAll('.choice').forEach(btn => {
       const phrase = btn.innerText.replace(/^[1-3]/, '').trim();
-      if (phrase === current.phrase) {
-        btn.classList.add(btn === clickedBtn ? 'correct' : 'reveal');
-      } else if (btn === clickedBtn) {
-        btn.classList.add('wrong');
-      }
+      if (phrase === current.phrase) btn.classList.add(btn === clickedBtn ? 'correct' : 'reveal');
+      else if (btn === clickedBtn)   btn.classList.add('wrong');
     });
 
     stats.total++;
-    if (isCorrect) stats.ok++; else stats.ng++;
+    if (isCorrect) { stats.ok++; sessionCorrect++; }
+    else             stats.ng++;
     updateStats();
 
-    await saveStreakToGAS(isCorrect);
+    // ペットをバウンス
+    if (isCorrect) {
+      const wrap = document.getElementById('petSvgWrap');
+      wrap.classList.remove('bounce');
+      void wrap.offsetWidth;
+      wrap.classList.add('bounce');
+      setTimeout(() => wrap.classList.remove('bounce'), 600);
+    }
 
     document.getElementById('resultHeader').className   = `result-header ${isCorrect ? 'ok' : 'ng'}`;
     document.getElementById('resultHeader').textContent = isCorrect ? '✅ Correct！' : '❌ Incorrect';
@@ -392,112 +751,123 @@
     document.getElementById('resultJp').textContent     = '🇯🇵 ' + current.translation;
     document.getElementById('resultEn').textContent     = '🇬🇧 ' + current.sentence;
 
-    // 読み上げボタンをリセット
     const speakBtn = document.getElementById('speakBtn');
     speakBtn.textContent = '🔊 英文を読み上げる';
     speakBtn.classList.remove('speaking');
 
-    const nextBtn = document.getElementById('nextBtn');
-    nextBtn.textContent = quizCountInSession >= 5 ? '結果を確認する →' : '次の問題へ →';
-
+    document.getElementById('nextBtn').textContent = quizCountInSession >= 5 ? '結果を確認する →' : '次の問題へ →';
     show('resultCard');
     show('nextBtn');
+  }
+
+  function nextQuiz() {
+    if (quizCountInSession >= 5) showFinalResult();
+    else { show('loading'); setTimeout(() => { hide('loading'); showQuiz(); }, 100); }
+  }
+
+  // ========== 最終リザルト ==========
+  async function showFinalResult() {
+    window.speechSynthesis.cancel();
+    hide('quizCard');
+    hide('resultCard');
+    hide('nextBtn');
+
+    // GASに結果を送信
+    let newStatus = null;
+    if (userId) {
+      try {
+        const res = await fetch(
+          `${GAS_URL}?action=saveResult&userId=${encodeURIComponent(userId)}&correct=${sessionCorrect}`,
+          { redirect: 'follow' }
+        );
+        newStatus = await res.json();
+      } catch(e) { console.log(e); }
+    }
+
+    if (newStatus) {
+      const oldStage = petStatus.stage;
+      petStatus = { ...petStatus, ...newStatus };
+
+      // レベルアップ演出
+      if (newStatus.levelUp) {
+        const banner = document.getElementById('levelupBanner');
+        banner.textContent = `🎉 レベルアップ！ ${STAGES[newStatus.stage].name} になったよ！`;
+        show('levelupBanner');
+        const wrap = document.getElementById('petSvgWrap');
+        wrap.classList.add('levelup');
+        setTimeout(() => wrap.classList.remove('levelup'), 900);
+      }
+
+      renderPet();
+    }
+
+    document.getElementById('finalScore').textContent = `${stats.ok} / 5`;
+    document.getElementById('finalPetMsg').textContent = petStatus
+      ? `${STAGES[petStatus.stage || 0].name}の累計正解数：${petStatus.totalCorrect || 0}問`
+      : '';
+
+    show('finalResultScreen');
   }
 
   // ========== 音声読み上げ ==========
   function speakSentence() {
     if (!current) return;
     const btn = document.getElementById('speakBtn');
-
-    // 再生中なら停止
     if (window.speechSynthesis.speaking) {
       window.speechSynthesis.cancel();
       btn.textContent = '🔊 英文を読み上げる';
       btn.classList.remove('speaking');
       return;
     }
-
-    const utterance = new SpeechSynthesisUtterance(current.sentence);
-    utterance.lang  = 'en-US';
-    utterance.rate  = 0.9;
-
-    utterance.onstart = () => {
-      btn.textContent = '⏹ 停止する';
-      btn.classList.add('speaking');
-    };
-    utterance.onend = utterance.onerror = () => {
-      btn.textContent = '🔊 英文を読み上げる';
-      btn.classList.remove('speaking');
-    };
-
-    window.speechSynthesis.speak(utterance);
+    const u = new SpeechSynthesisUtterance(current.sentence);
+    u.lang = 'en-US'; u.rate = 0.9;
+    u.onstart = () => { btn.textContent = '⏹ 停止する'; btn.classList.add('speaking'); };
+    u.onend = u.onerror = () => { btn.textContent = '🔊 英文を読み上げる'; btn.classList.remove('speaking'); };
+    window.speechSynthesis.speak(u);
   }
 
-  function nextQuiz() {
-    if (quizCountInSession >= 5) {
-      showFinalResult();
-    } else {
-      show('loading');
-      setTimeout(() => showQuiz(), 100);
+  // ========== CSV / 履歴 / 穴埋め / 選択肢 ==========
+  function parseCSV(text) {
+    return text.trim().split('\n').map((line, i) => {
+      const cols = splitCSVLine(line);
+      return { rowNum: i+1, phrase: cols[0], role: cols[1], translation: cols[2], sentence: cols[3], group: cols[4] };
+    }).filter(r => r.phrase && r.sentence);
+  }
+  function splitCSVLine(line) {
+    const result = []; let cur = '', inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (c === '"') { inQ = !inQ; continue; }
+      if (c === ',' && !inQ) { result.push(cur.trim()); cur = ''; continue; }
+      cur += c;
     }
+    result.push(cur.trim()); return result;
   }
-
-  function showFinalResult() {
-    window.speechSynthesis.cancel();
-    hide('gameContainer');
-    document.getElementById('finalScore').textContent    = `${stats.ok} / 5`;
-    document.getElementById('finalStreakNum').textContent = streak;
-    show('finalResultScreen');
-  }
-
-  function updateStreakBadge() {
-    document.getElementById('streakNum').textContent = streak;
-  }
-
   function getHistory() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch { return []; } }
-  function addHistory(rowNum) {
-    let h = getHistory(); h.push(rowNum);
-    if (h.length > HISTORY_SIZE) h.shift();
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(h));
-  }
+  function addHistory(rowNum) { let h = getHistory(); h.push(rowNum); if (h.length > HISTORY_SIZE) h.shift(); localStorage.setItem(STORAGE_KEY, JSON.stringify(h)); }
   function clearHistory() { localStorage.removeItem(STORAGE_KEY); }
 
   function makeBlankSentence(phrase, sentence) {
-    const clean = phrase
-      .replace(/\s*[\(（][^\)）]*[\)）]/g, '')
-      .replace(/[~〜～]/g, '')
-      .replace(/[　\s]+/g, ' ')
-      .trim();
-
-    // ① 完全一致
+    const clean = phrase.replace(/\s*[\(（][^\)）]*[\)）]/g, '').replace(/[~〜～]/g, '').replace(/[　\s]+/g, ' ').trim();
     const exact = new RegExp(escapeRegExp(clean), 'i');
     if (exact.test(sentence)) return sentence.replace(exact, '(  )');
-
-    // ② 各単語を語幹化して柔軟にマッチ
     const words = clean.split(/\s+/);
     const stemWord = w => w.replace(/(ling|ing|tion|ed|er|est|es|s|d|e)$/i, '');
-
-    const stemPattern = words
-      .map(w => escapeRegExp(stemWord(w)) + '[a-z]*')
-      .join('\\s+');
+    const stemPattern = words.map(w => escapeRegExp(stemWord(w)) + '[a-z]*').join('\\s+');
     const stemRegex = new RegExp(stemPattern, 'i');
     if (stemRegex.test(sentence)) return sentence.replace(stemRegex, '(  )');
-
-    // ③ 先頭1単語の語幹のみでフォールバック
     const firstStem = stemWord(words[0]);
     if (firstStem.length >= 3) {
       const firstRegex = new RegExp(escapeRegExp(firstStem) + '[a-z]*', 'i');
       if (firstRegex.test(sentence)) return sentence.replace(firstRegex, '(  )');
     }
-
     return `(  ) → ${sentence}`;
   }
 
   function makeChoices(correctPhrase, groupName) {
     const same  = shuffle(allPhrases.filter(p => p.group === groupName && p.phrase !== correctPhrase)).map(p => p.phrase);
     const other = shuffle(allPhrases.filter(p => p.group !== groupName && p.phrase !== correctPhrase)).map(p => p.phrase);
-    const dummies = [...same, ...other].slice(0, 2);
-    return shuffle([correctPhrase, ...dummies]);
+    return shuffle([correctPhrase, ...[...same, ...other].slice(0, 2)]);
   }
 
   function updateStats() {
@@ -507,16 +877,8 @@
     document.getElementById('rateNum').textContent  = stats.total > 0 ? Math.round(stats.ok / stats.total * 100) + '%' : '-';
   }
 
-  function shuffle(array) {
-    const a = [...array];
-    for (let i = a.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [a[i], a[j]] = [a[j], a[i]];
-    }
-    return a;
-  }
-
-  function escapeRegExp(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+  function shuffle(arr) { const a=[...arr]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+  function escapeRegExp(s) { return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }
   function show(id) { document.getElementById(id).classList.remove('hidden'); }
   function hide(id) { document.getElementById(id).classList.add('hidden'); }
 </script>
