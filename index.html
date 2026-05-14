@@ -9,7 +9,6 @@
 <style>
   :root {
     --green: #06C755;
-    --green-dark: #05A847;
     --bg: #0f172a;
     --surface: #1e293b;
     --surface2: #273548;
@@ -19,6 +18,7 @@
     --correct: #2ed573;
     --wrong: #ff4757;
     --gold: #fbbf24;
+    --blue: #38bdf8;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -31,19 +31,14 @@
     padding: 14px 16px 32px;
     background-image:
       radial-gradient(ellipse at 15% 0%, rgba(6,199,85,0.07) 0%, transparent 55%),
-      radial-gradient(ellipse at 85% 100%, rgba(6,199,85,0.05) 0%, transparent 55%);
+      radial-gradient(ellipse at 85% 100%, rgba(56,189,248,0.05) 0%, transparent 55%);
   }
 
   .wrap { width: 100%; display: flex; flex-direction: column; gap: 12px; }
 
+  /* ========== 統計 ========== */
   .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-  .stat {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 12px 6px;
-    text-align: center;
-  }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 12px 6px; text-align: center; }
   .stat-num { font-size: 24px; font-weight: 700; font-family: 'Space Mono', monospace; line-height: 1; }
   .stat-label { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
   .s-total .stat-num { color: var(--text); }
@@ -51,292 +46,227 @@
   .s-ng    .stat-num { color: var(--wrong); }
   .s-rate  .stat-num { color: var(--gold); }
 
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 20px 18px;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    animation: fadeUp 0.3s ease;
-  }
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(8px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
+  /* ========== 通常クイズ ========== */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 20px 18px; display: flex; flex-direction: column; gap: 16px; animation: fadeUp 0.3s ease; }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);} }
 
   .card-tag { display: flex; align-items: center; gap: 8px; }
-  .tag-quiz {
-    font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 20px;
-    background: rgba(6,199,85,0.12); color: var(--green); border: 1px solid rgba(6,199,85,0.25);
-  }
+  .tag-quiz     { font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 20px; background: rgba(6,199,85,0.12); color: var(--green); border: 1px solid rgba(6,199,85,0.25); }
+  .tag-scenario { font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 20px; background: rgba(56,189,248,0.12); color: var(--blue); border: 1px solid rgba(56,189,248,0.25); }
   .q-num { margin-left: auto; font-size: 13px; color: var(--text-dim); font-family: 'Space Mono', monospace; }
 
-  .sentence {
-    font-size: 18px; line-height: 1.85; color: #c7d9f5;
-    background: rgba(255,255,255,0.03); border-radius: 14px;
-    padding: 16px 18px; border: 1px solid var(--border); word-break: break-word;
-  }
-  .blank {
-    display: inline-block; background: rgba(6,199,85,0.1);
-    border: 1.5px dashed var(--green); border-radius: 7px; padding: 2px 12px;
-    color: var(--green); font-family: 'Space Mono', monospace;
-    font-size: 15px; font-weight: 700; min-width: 70px; text-align: center;
-  }
+  .sentence { font-size: 18px; line-height: 1.85; color: #c7d9f5; background: rgba(255,255,255,0.03); border-radius: 14px; padding: 16px 18px; border: 1px solid var(--border); word-break: break-word; }
+  .blank { display: inline-block; background: rgba(6,199,85,0.1); border: 1.5px dashed var(--green); border-radius: 7px; padding: 2px 12px; color: var(--green); font-family: 'Space Mono', monospace; font-size: 15px; font-weight: 700; min-width: 70px; text-align: center; }
   .hint { font-size: 14px; color: var(--text-dim); display: flex; align-items: flex-start; gap: 6px; line-height: 1.65; }
 
+  /* ========== シナリオクイズ ========== */
+  .scenario-card { background: var(--surface); border: 1px solid rgba(56,189,248,0.2); border-radius: 20px; padding: 20px 18px; display: flex; flex-direction: column; gap: 14px; animation: fadeUp 0.3s ease; }
+  .scenario-scene { font-size: 11px; font-weight: 700; letter-spacing: 1px; color: var(--blue); padding: 4px 10px; background: rgba(56,189,248,0.08); border-radius: 8px; display: inline-block; }
+  .scenario-cue-wrap { background: rgba(56,189,248,0.06); border: 1px solid rgba(56,189,248,0.15); border-radius: 14px; padding: 14px 16px; }
+  .scenario-colleague { font-size: 11px; color: var(--blue); margin-bottom: 6px; font-weight: 700; }
+  .scenario-cue { font-size: 16px; line-height: 1.7; color: #c7d9f5; word-break: break-word; }
+  .scenario-question { font-size: 13px; color: var(--text-dim); padding: 10px 14px; background: rgba(255,255,255,0.03); border-radius: 10px; border: 1px solid var(--border); }
+
+  /* ========== 選択肢 ========== */
   .choices { display: flex; flex-direction: column; gap: 10px; }
-  .choice {
-    background: var(--surface2); border: 1.5px solid var(--border); border-radius: 14px;
-    padding: 16px; cursor: pointer; font-size: 15px; font-family: 'Space Mono', monospace;
-    color: var(--text); text-align: left; display: flex; align-items: center; gap: 12px;
-    transition: all 0.15s ease; width: 100%; line-height: 1.5; word-break: break-word;
-    -webkit-appearance: none; appearance: none;
-  }
-  .choice:active:not(:disabled) { transform: scale(0.98); background: rgba(6,199,85,0.06); }
+  .choice { background: var(--surface2); border: 1.5px solid var(--border); border-radius: 14px; padding: 16px; cursor: pointer; font-size: 15px; font-family: 'Space Mono', monospace; color: var(--text); text-align: left; display: flex; align-items: center; gap: 12px; transition: all 0.15s ease; width: 100%; line-height: 1.5; word-break: break-word; -webkit-appearance: none; appearance: none; }
+  .choice:active:not(:disabled) { transform: scale(0.98); }
   .choice:disabled { cursor: default; }
   .choice.correct { background: rgba(46,213,115,0.1); border-color: var(--correct); color: var(--correct); }
   .choice.wrong   { background: rgba(255,71,87,0.08); border-color: var(--wrong); color: var(--wrong); opacity: 0.7; }
   .choice.reveal  { background: rgba(46,213,115,0.06); border-color: rgba(46,213,115,0.3); color: var(--correct); }
-  .choice-num {
-    width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,0.06);
-    display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0;
-  }
+  .choice-num { width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
   .choice.correct .choice-num { background: var(--correct); color: #000; }
   .choice.wrong   .choice-num { background: var(--wrong);   color: #fff; }
 
-  .result-card {
-    background: var(--surface); border-radius: 20px; padding: 20px 18px;
-    border: 1px solid var(--border); animation: fadeUp 0.3s ease;
-    display: flex; flex-direction: column; gap: 14px;
-  }
+  /* ========== 結果カード ========== */
+  .result-card { background: var(--surface); border-radius: 20px; padding: 20px 18px; border: 1px solid var(--border); animation: fadeUp 0.3s ease; display: flex; flex-direction: column; gap: 14px; }
   .result-header { font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
   .result-header.ok { color: var(--correct); }
   .result-header.ng { color: var(--wrong); }
-
   .answer-box { background: rgba(6,199,85,0.07); border: 1px solid rgba(6,199,85,0.18); border-radius: 12px; padding: 14px 16px; }
   .answer-phrase { font-family: 'Space Mono', monospace; font-size: 15px; font-weight: 700; color: var(--correct); word-break: break-word; }
   .answer-role   { font-size: 13px; color: var(--text-dim); margin-top: 4px; }
   .divider       { border: none; border-top: 1px solid var(--border); }
   .result-jp     { font-size: 14px; line-height: 1.75; color: var(--text-dim); }
   .result-en     { font-size: 14px; line-height: 1.75; color: #a0b4cc; word-break: break-word; }
+  .result-tip    { font-size: 13px; color: var(--gold); background: rgba(251,191,36,0.08); border: 1px solid rgba(251,191,36,0.15); border-radius: 10px; padding: 10px 14px; line-height: 1.6; }
 
-  /* 音声読み上げボタン */
-  .speak-btn {
-    background: rgba(6,199,85,0.1);
-    border: 1px solid rgba(6,199,85,0.3);
-    border-radius: 10px;
-    padding: 10px 16px;
-    color: var(--green);
-    font-size: 14px;
-    font-weight: 700;
-    cursor: pointer;
-    width: 100%;
-    font-family: 'Noto Sans JP', sans-serif;
-    transition: all 0.15s ease;
-    -webkit-appearance: none;
-    appearance: none;
-  }
-  .speak-btn:active { opacity: 0.7; transform: scale(0.98); }
-  .speak-btn.speaking {
-    background: rgba(6,199,85,0.2);
-    border-color: var(--green);
-  }
+  .speak-btn { background: rgba(6,199,85,0.1); border: 1px solid rgba(6,199,85,0.3); border-radius: 10px; padding: 10px 16px; color: var(--green); font-size: 14px; font-weight: 700; cursor: pointer; width: 100%; font-family: 'Noto Sans JP', sans-serif; -webkit-appearance: none; appearance: none; transition: all 0.15s ease; }
+  .speak-btn.speaking { background: rgba(6,199,85,0.2); border-color: var(--green); }
 
-  /* 終了時リザルト画面 */
-  .final-result { text-align: center; padding: 40px 20px; }
-  .final-score { font-size: 48px; font-weight: 800; color: var(--green); margin: 10px 0; font-family: 'Space Mono', monospace; }
+  .next-btn { background: var(--green); color: #fff; border: none; border-radius: 16px; padding: 18px; font-size: 16px; font-weight: 700; cursor: pointer; font-family: 'Noto Sans JP', sans-serif; box-shadow: 0 4px 14px rgba(6,199,85,0.3); width: 100%; -webkit-appearance: none; appearance: none; }
+  .next-btn:active { transform: scale(0.98); }
 
-  .next-btn {
-    background: var(--green); color: #fff; border: none; border-radius: 16px;
-    padding: 18px; font-size: 16px; font-weight: 700; cursor: pointer;
-    font-family: 'Noto Sans JP', sans-serif; transition: all 0.15s ease;
-    box-shadow: 0 4px 14px rgba(6,199,85,0.3); width: 100%;
-    -webkit-appearance: none; appearance: none;
-  }
-  .next-btn:active { transform: scale(0.98); box-shadow: 0 2px 8px rgba(6,199,85,0.2); }
-
-  .loading {
-    display: flex; align-items: center; justify-content: center;
-    gap: 8px; padding: 60px 20px; color: var(--text-dim); font-size: 15px;
-  }
+  .loading { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 60px 20px; color: var(--text-dim); font-size: 15px; }
   .dot { width: 8px; height: 8px; background: var(--green); border-radius: 50%; animation: bounce 1.2s infinite; }
   .dot:nth-child(2) { animation-delay: 0.2s; }
   .dot:nth-child(3) { animation-delay: 0.4s; }
-  @keyframes bounce {
-    0%, 60%, 100% { transform: translateY(0); opacity: 0.6; }
-    30% { transform: translateY(-6px); opacity: 1; }
-  }
+  @keyframes bounce { 0%,60%,100%{transform:translateY(0);opacity:0.6;}30%{transform:translateY(-6px);opacity:1;} }
 
   .hidden { display: none !important; }
 
+  /* 最終リザルト */
+  .final-result { text-align: center; padding: 30px 16px; }
+  .final-score  { font-size: 52px; font-weight: 900; color: var(--green); margin: 10px 0; font-family: 'Space Mono', monospace; }
+  .mode-tag { display: inline-block; font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 20px; margin-bottom: 10px; }
+  .mode-tag.quiz     { background: rgba(6,199,85,0.12); color: var(--green); border: 1px solid rgba(6,199,85,0.25); }
+  .mode-tag.scenario { background: rgba(56,189,248,0.12); color: var(--blue); border: 1px solid rgba(56,189,248,0.25); }
+
+  /* 連続正解バッジ */
   .streak-bar { display: flex; align-items: center; justify-content: flex-end; }
-  .streak-badge {
-    font-size: 13px; font-weight: 700; color: var(--gold);
-    background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.2);
-    border-radius: 20px; padding: 5px 14px;
-  }
+  .streak-badge { font-size: 13px; font-weight: 700; color: var(--gold); background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.2); border-radius: 20px; padding: 5px 14px; }
 </style>
 </head>
 <body>
 <div class="wrap">
 
-  <div id="gameContainer">
-    <div class="streak-bar">
-      <div class="streak-badge">🔥 <span id="streakNum">0</span> 連続正解</div>
-    </div>
-
-    <div class="stats">
-      <div class="stat s-total"><div class="stat-num" id="totalNum">0</div><div class="stat-label">問題数</div></div>
-      <div class="stat s-ok">  <div class="stat-num" id="okNum">0</div>  <div class="stat-label">正解</div></div>
-      <div class="stat s-ng">  <div class="stat-num" id="ngNum">0</div>  <div class="stat-label">不正解</div></div>
-      <div class="stat s-rate"><div class="stat-num" id="rateNum">-</div><div class="stat-label">正答率</div></div>
-    </div>
-
-    <div class="loading" id="loading">
-      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
-      <span>問題を読み込み中...</span>
-    </div>
-
-    <div class="card hidden" id="quizCard">
-      <div class="card-tag">
-        <span class="tag-quiz">🇬🇧 穴埋めクイズ</span>
-        <span class="q-num" id="qNum">Q1</span>
-      </div>
-      <div class="sentence" id="sentenceEl"></div>
-      <div class="hint"     id="hintEl"></div>
-      <div class="choices"  id="choicesEl"></div>
-    </div>
-
-    <div class="result-card hidden" id="resultCard">
-      <div class="result-header" id="resultHeader"></div>
-      <div class="answer-box">
-        <div class="answer-phrase" id="answerPhrase"></div>
-        <div class="answer-role"   id="answerRole"></div>
-      </div>
-      <hr class="divider">
-      <div class="result-jp" id="resultJp"></div>
-      <div class="result-en" id="resultEn"></div>
-      <button class="speak-btn" id="speakBtn" onclick="speakSentence()">🔊 英文を読み上げる</button>
-    </div>
-
-    <button class="next-btn hidden" id="nextBtn" onclick="nextQuiz()">次の問題へ →</button>
+  <!-- 連続正解バッジ -->
+  <div class="streak-bar">
+    <div class="streak-badge">🔥 <span id="streakNum">0</span> 連続正解</div>
   </div>
 
+  <!-- 統計 -->
+  <div class="stats">
+    <div class="stat s-total"><div class="stat-num" id="totalNum">0</div><div class="stat-label">問題数</div></div>
+    <div class="stat s-ok">  <div class="stat-num" id="okNum">0</div>  <div class="stat-label">正解</div></div>
+    <div class="stat s-ng">  <div class="stat-num" id="ngNum">0</div>  <div class="stat-label">不正解</div></div>
+    <div class="stat s-rate"><div class="stat-num" id="rateNum">-</div><div class="stat-label">正答率</div></div>
+  </div>
+
+  <!-- ローディング -->
+  <div class="loading" id="loading">
+    <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+    <span>問題を読み込み中...</span>
+  </div>
+
+  <!-- 通常クイズカード -->
+  <div class="card hidden" id="quizCard">
+    <div class="card-tag">
+      <span class="tag-quiz">🇬🇧 穴埋めクイズ</span>
+      <span class="q-num" id="qNum">Step 1 / 5</span>
+    </div>
+    <div class="sentence" id="sentenceEl"></div>
+    <div class="hint"     id="hintEl"></div>
+    <div class="choices"  id="choicesEl"></div>
+  </div>
+
+  <!-- シナリオクイズカード -->
+  <div class="scenario-card hidden" id="scenarioCard">
+    <div class="card-tag">
+      <span class="tag-scenario">🏢 会話シナリオ</span>
+      <span class="q-num" id="scenarioQNum">Step 1 / 5</span>
+    </div>
+    <div class="scenario-scene" id="scenarioScene"></div>
+    <div class="scenario-cue-wrap">
+      <div class="scenario-colleague">👤 同僚</div>
+      <div class="scenario-cue" id="scenarioCue"></div>
+    </div>
+    <div class="scenario-question">💬 あなたはなんと返しますか？</div>
+    <div class="choices" id="scenarioChoicesEl"></div>
+  </div>
+
+  <!-- 結果カード -->
+  <div class="result-card hidden" id="resultCard">
+    <div class="result-header" id="resultHeader"></div>
+    <div class="answer-box">
+      <div class="answer-phrase" id="answerPhrase"></div>
+      <div class="answer-role"   id="answerRole"></div>
+    </div>
+    <hr class="divider">
+    <div class="result-jp" id="resultJp"></div>
+    <div class="result-en" id="resultEn"></div>
+    <div class="result-tip hidden" id="resultTip"></div>
+    <button class="speak-btn" id="speakBtn" onclick="speakSentence()">🔊 英文を読み上げる</button>
+  </div>
+
+  <button class="next-btn hidden" id="nextBtn" onclick="nextQuiz()">次の問題へ →</button>
+
+  <!-- 最終リザルト -->
   <div id="finalResultScreen" class="card hidden">
     <div class="final-result">
-      <div class="tag-quiz" style="display:inline-block">MISSION COMPLETE</div>
-      <h2 style="margin-top:20px">お疲れ様でした！</h2>
+      <div id="modeTag" class="mode-tag quiz">MISSION COMPLETE</div>
+      <h2 style="margin-top:14px">お疲れ様でした！</h2>
       <div class="final-score" id="finalScore">0 / 5</div>
-      <p style="color:var(--text-dim)">5問中、何問正解できたかな？</p>
-      <div class="streak-badge" style="display:inline-block; margin-top:20px; font-size:18px">累計 🔥 <span id="finalStreakNum">0</span> 連続正解中</div>
-      <button class="next-btn" style="margin-top:30px" onclick="liff.closeWindow()">クイズを終了する</button>
+      <p style="color:var(--text-dim); font-size:13px">5問中の正解数</p>
+      <button class="next-btn" style="margin-top:24px" onclick="liff.closeWindow()">クイズを終了する</button>
     </div>
   </div>
 
 </div>
 
 <script>
-  const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQnCTkmh0HSb-kfodK4N492cJPBdy99ONO4lqoMw2erSgVJtAWsGsdNTp_G0nUCuvHjvyACDfSUeK1s/pub?gid=0&single=true&output=csv';
+  // ★ここに実際の値を入れてください
+　const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQnCTkmh0HSb-kfodK4N492cJPBdy99ONO4lqoMw2erSgVJtAWsGsdNTp_G0nUCuvHjvyACDfSUeK1s/pub?gid=0&single=true&output=csv';
   const LIFF_ID = '2009654666-bNmDrrps';
-  const GAS_URL = 'https://script.google.com/macros/s/AKfycbw1ikdvPiZwy4NsCspTnaaJUi-sxuTtzwDd8XBNmWySvorkfrOHw4DwGn7650GsOznj/exec';
+  const GAS_URL = 'https://script.google.com/macros/s/AKfycbxHN95ks2HN72bgSIs0CAUPU63Dmz40XoM8_aMJBeflrEW7qPM7v4DoxL14GwNB8qtQ/exec';
+
 
   const HISTORY_SIZE = 15;
   const STORAGE_KEY  = 'quiz_history';
 
-  let allPhrases = [];
-  let stats      = { total: 0, ok: 0, ng: 0 };
+  let allPhrases         = [];
+  let stats              = { total: 0, ok: 0, ng: 0 };
+  let streak             = 0;
   let quizCountInSession = 0;
-  let current    = null;
-  let userId     = null;
-  let streak     = 0;
+  let sessionCorrect     = 0;
+  let current            = null;
+  let currentScenario    = null;
+  let userId             = null;
+  let quizMode           = 'quiz'; // 'quiz' or 'scenario'
 
+  // ========== 初期化 ==========
   window.onload = async () => {
     show('loading');
+
+    // URLパラメータでモード判定
+    const urlParams = new URLSearchParams(window.location.search);
+    quizMode = urlParams.get('mode') === 'scenario' ? 'scenario' : 'quiz';
+
     try {
       await liff.init({ liffId: LIFF_ID });
       if (liff.isLoggedIn()) {
         const profile = await liff.getProfile();
         userId = profile.userId;
       }
-    } catch(e) { console.log('LIFF init:', e); }
+    } catch(e) { console.log('LIFF:', e); }
 
-    await Promise.all([loadPhrases(), fetchStreak()]);
+    if (quizMode === 'quiz') await loadPhrases();
+
+    hide('loading');
     showQuiz();
   };
 
+  // ========== CSVからデータ読み込み ==========
   async function loadPhrases() {
     try {
       const res  = await fetch(CSV_URL + '&cachebust=' + Date.now());
-      const text = await res.text();
-      allPhrases = parseCSV(text);
+      allPhrases = parseCSV(await res.text());
     } catch(e) {
-      document.getElementById('loading').innerHTML = '⚠️ データ読み込みエラー';
+      try {
+        const res2  = await fetch('https://corsproxy.io/?' + encodeURIComponent(CSV_URL));
+        allPhrases  = parseCSV(await res2.text());
+      } catch(e2) {
+        document.getElementById('loading').innerHTML = '⚠️ データ読み込みエラー';
+      }
     }
   }
 
-  async function fetchStreak() {
-    if (!userId) return;
-    try {
-      const response = await fetch(`${GAS_URL}?action=getStreak&userId=${encodeURIComponent(userId)}`);
-      const data = await response.json();
-      streak = data.streak;
-      updateStreakBadge();
-    } catch(e) { console.error(e); }
-  }
-
-  async function saveStreakToGAS(isCorrect) {
-    if (!userId) {
-      streak = isCorrect ? streak + 1 : 0;
-      updateStreakBadge();
-      return;
-    }
-    try {
-      const response = await fetch(`${GAS_URL}?action=saveStreak&userId=${encodeURIComponent(userId)}&isCorrect=${isCorrect}`);
-      const data = await response.json();
-      streak = data.streak;
-      updateStreakBadge();
-    } catch(e) {
-      streak = isCorrect ? streak + 1 : 0;
-      updateStreakBadge();
-    }
-  }
-
-  function parseCSV(text) {
-    const lines = text.trim().split('\n');
-    return lines.map((line, i) => {
-      const cols = splitCSVLine(line);
-      return { rowNum: i + 1, phrase: cols[0], role: cols[1], translation: cols[2], sentence: cols[3], group: cols[4] };
-    }).filter(r => r.phrase && r.sentence);
-  }
-
-  function splitCSVLine(line) {
-    const result = [];
-    let cur = '', inQ = false;
-    for (let i = 0; i < line.length; i++) {
-      const c = line[i];
-      if (c === '"') { inQ = !inQ; continue; }
-      if (c === ',' && !inQ) { result.push(cur.trim()); cur = ''; continue; }
-      cur += c;
-    }
-    result.push(cur.trim());
-    return result;
-  }
-
+  // ========== クイズ表示 ==========
   function showQuiz() {
-    if (quizCountInSession >= 5) {
-      showFinalResult();
-      return;
-    }
-
-    hide('quizCard');
-    hide('resultCard');
-    hide('nextBtn');
-
-    // 読み上げを停止
+    if (quizCountInSession >= 5) { showFinalResult(); return; }
+    hide('quizCard'); hide('scenarioCard'); hide('resultCard'); hide('nextBtn');
     window.speechSynthesis.cancel();
 
+    quizCountInSession++;
+    const stepText = `Step ${quizCountInSession} / 5`;
+
+    if (quizMode === 'scenario') showScenarioQuiz(stepText);
+    else                          showNormalQuiz(stepText);
+  }
+
+  // 通常クイズ
+  function showNormalQuiz(stepText) {
     const history = getHistory();
     let available = allPhrases.filter(p => !history.includes(p.rowNum));
     if (available.length === 0) { clearHistory(); available = [...allPhrases]; }
@@ -344,46 +274,69 @@
     current = available[Math.floor(Math.random() * available.length)];
     addHistory(current.rowNum);
 
-    quizCountInSession++;
-    document.getElementById('qNum').textContent = `Step ${quizCountInSession} / 5`;
-
+    document.getElementById('qNum').textContent = stepText;
     const quizSentence = makeBlankSentence(current.phrase, current.sentence);
     document.getElementById('sentenceEl').innerHTML = quizSentence.replace('(  )', '<span class="blank">(  )</span>');
     document.getElementById('hintEl').innerHTML = `<span>📝</span><span>${current.translation}</span>`;
 
     const choices = makeChoices(current.phrase, current.group);
-    const choicesEl = document.getElementById('choicesEl');
-    choicesEl.innerHTML = '';
+    const el = document.getElementById('choicesEl');
+    el.innerHTML = '';
     choices.forEach((c, i) => {
       const btn = document.createElement('button');
       btn.className = 'choice';
       btn.innerHTML = `<span class="choice-num">${i + 1}</span>${c}`;
-      btn.onclick = () => answer(c, btn);
-      choicesEl.appendChild(btn);
+      btn.onclick = () => answerNormal(c, btn);
+      el.appendChild(btn);
     });
-
-    hide('loading');
     show('quizCard');
   }
 
-  async function answer(selected, clickedBtn) {
-    document.querySelectorAll('.choice').forEach(b => b.disabled = true);
+  // シナリオクイズ
+  async function showScenarioQuiz(stepText) {
+    show('loading');
+    try {
+      const res = await fetch(`${GAS_URL}?action=getScenario`, { redirect: 'follow' });
+      currentScenario = await res.json();
+    } catch(e) {
+      currentScenario = null;
+      hide('loading');
+      quizMode = 'quiz';
+      await loadPhrases();
+      showNormalQuiz(stepText);
+      return;
+    }
+    hide('loading');
+
+    document.getElementById('scenarioQNum').textContent = stepText;
+    document.getElementById('scenarioScene').textContent = currentScenario.scene;
+    document.getElementById('scenarioCue').textContent   = currentScenario.cue;
+
+    const choices = shuffle([currentScenario.correct, currentScenario.wrong1, currentScenario.wrong2]);
+    const el = document.getElementById('scenarioChoicesEl');
+    el.innerHTML = '';
+    choices.forEach((c, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'choice';
+      btn.innerHTML = `<span class="choice-num">${i + 1}</span>${c}`;
+      btn.onclick = () => answerScenario(c, btn);
+      el.appendChild(btn);
+    });
+    show('scenarioCard');
+  }
+
+  // ========== 回答処理（通常）==========
+  function answerNormal(selected, clickedBtn) {
+    document.querySelectorAll('#choicesEl .choice').forEach(b => b.disabled = true);
     const isCorrect = selected === current.phrase;
 
-    document.querySelectorAll('.choice').forEach(btn => {
+    document.querySelectorAll('#choicesEl .choice').forEach(btn => {
       const phrase = btn.innerText.replace(/^[1-3]/, '').trim();
-      if (phrase === current.phrase) {
-        btn.classList.add(btn === clickedBtn ? 'correct' : 'reveal');
-      } else if (btn === clickedBtn) {
-        btn.classList.add('wrong');
-      }
+      if (phrase === current.phrase) btn.classList.add(btn === clickedBtn ? 'correct' : 'reveal');
+      else if (btn === clickedBtn)   btn.classList.add('wrong');
     });
 
-    stats.total++;
-    if (isCorrect) stats.ok++; else stats.ng++;
-    updateStats();
-
-    await saveStreakToGAS(isCorrect);
+    updateStats(isCorrect);
 
     document.getElementById('resultHeader').className   = `result-header ${isCorrect ? 'ok' : 'ng'}`;
     document.getElementById('resultHeader').textContent = isCorrect ? '✅ Correct！' : '❌ Incorrect';
@@ -391,134 +344,129 @@
     document.getElementById('answerRole').textContent   = '役割：' + current.role;
     document.getElementById('resultJp').textContent     = '🇯🇵 ' + current.translation;
     document.getElementById('resultEn').textContent     = '🇬🇧 ' + current.sentence;
+    hide('resultTip');
+    resetSpeakBtn();
 
-    // 読み上げボタンをリセット
-    const speakBtn = document.getElementById('speakBtn');
-    speakBtn.textContent = '🔊 英文を読み上げる';
-    speakBtn.classList.remove('speaking');
+    document.getElementById('nextBtn').textContent = quizCountInSession >= 5 ? '結果を確認する →' : '次の問題へ →';
+    show('resultCard'); show('nextBtn');
+  }
 
-    const nextBtn = document.getElementById('nextBtn');
-    nextBtn.textContent = quizCountInSession >= 5 ? '結果を確認する →' : '次の問題へ →';
+  // ========== 回答処理（シナリオ）==========
+  function answerScenario(selected, clickedBtn) {
+    document.querySelectorAll('#scenarioChoicesEl .choice').forEach(b => b.disabled = true);
+    const isCorrect = selected === currentScenario.correct;
 
-    show('resultCard');
-    show('nextBtn');
+    document.querySelectorAll('#scenarioChoicesEl .choice').forEach(btn => {
+      const text = btn.innerText.replace(/^[1-3]/, '').trim();
+      if (text === currentScenario.correct) btn.classList.add(btn === clickedBtn ? 'correct' : 'reveal');
+      else if (btn === clickedBtn)           btn.classList.add('wrong');
+    });
+
+    updateStats(isCorrect);
+
+    document.getElementById('resultHeader').className   = `result-header ${isCorrect ? 'ok' : 'ng'}`;
+    document.getElementById('resultHeader').textContent = isCorrect ? '✅ Correct！' : '❌ Incorrect';
+    document.getElementById('answerPhrase').textContent = currentScenario.correct;
+    document.getElementById('answerRole').textContent   = currentScenario.explanation;
+    document.getElementById('resultJp').textContent     = `🏢 ${currentScenario.scene}`;
+    document.getElementById('resultEn').textContent     = `👤 ${currentScenario.cue}`;
+
+    const tipEl = document.getElementById('resultTip');
+    if (currentScenario.tip) { tipEl.textContent = `💡 ${currentScenario.tip}`; show('resultTip'); }
+    else hide('resultTip');
+
+    // 音声読み上げ用にcurrentをセット
+    current = { sentence: currentScenario.correct };
+    resetSpeakBtn();
+
+    document.getElementById('nextBtn').textContent = quizCountInSession >= 5 ? '結果を確認する →' : '次の問題へ →';
+    show('resultCard'); show('nextBtn');
+  }
+
+  function updateStats(isCorrect) {
+    stats.total++;
+    if (isCorrect) { stats.ok++; streak++; sessionCorrect++; }
+    else           { stats.ng++; streak = 0; }
+    document.getElementById('totalNum').textContent  = stats.total;
+    document.getElementById('okNum').textContent     = stats.ok;
+    document.getElementById('ngNum').textContent     = stats.ng;
+    document.getElementById('rateNum').textContent   = stats.total > 0 ? Math.round(stats.ok / stats.total * 100) + '%' : '-';
+    document.getElementById('streakNum').textContent = streak;
+  }
+
+  function nextQuiz() {
+    if (quizCountInSession >= 5) showFinalResult();
+    else { show('loading'); setTimeout(() => { hide('loading'); showQuiz(); }, 100); }
+  }
+
+  function showFinalResult() {
+    window.speechSynthesis.cancel();
+    hide('quizCard'); hide('scenarioCard'); hide('resultCard'); hide('nextBtn');
+
+    const tag = document.getElementById('modeTag');
+    tag.className = `mode-tag ${quizMode}`;
+    tag.textContent = quizMode === 'scenario' ? '🏢 SCENARIO COMPLETE' : '✍️ QUIZ COMPLETE';
+
+    document.getElementById('finalScore').textContent = `${stats.ok} / 5`;
+    show('finalResultScreen');
   }
 
   // ========== 音声読み上げ ==========
   function speakSentence() {
     if (!current) return;
     const btn = document.getElementById('speakBtn');
-
-    // 再生中なら停止
     if (window.speechSynthesis.speaking) {
-      window.speechSynthesis.cancel();
-      btn.textContent = '🔊 英文を読み上げる';
-      btn.classList.remove('speaking');
-      return;
+      window.speechSynthesis.cancel(); resetSpeakBtn(); return;
     }
-
-    const utterance = new SpeechSynthesisUtterance(current.sentence);
-    utterance.lang  = 'en-US';
-    utterance.rate  = 0.9;
-
-    utterance.onstart = () => {
-      btn.textContent = '⏹ 停止する';
-      btn.classList.add('speaking');
-    };
-    utterance.onend = utterance.onerror = () => {
-      btn.textContent = '🔊 英文を読み上げる';
-      btn.classList.remove('speaking');
-    };
-
-    window.speechSynthesis.speak(utterance);
+    const u = new SpeechSynthesisUtterance(current.sentence);
+    u.lang = 'en-US'; u.rate = 0.9;
+    u.onstart = () => { btn.textContent = '⏹ 停止する'; btn.classList.add('speaking'); };
+    u.onend = u.onerror = () => resetSpeakBtn();
+    window.speechSynthesis.speak(u);
+  }
+  function resetSpeakBtn() {
+    const btn = document.getElementById('speakBtn');
+    btn.textContent = '🔊 英文を読み上げる';
+    btn.classList.remove('speaking');
   }
 
-  function nextQuiz() {
-    if (quizCountInSession >= 5) {
-      showFinalResult();
-    } else {
-      show('loading');
-      setTimeout(() => showQuiz(), 100);
-    }
+  // ========== CSV / 履歴 / 穴埋め / 選択肢 ==========
+  function parseCSV(text) {
+    return text.trim().split('\n').map((line, i) => {
+      const cols = splitCSVLine(line);
+      return { rowNum: i+1, phrase: cols[0], role: cols[1], translation: cols[2], sentence: cols[3], group: cols[4] };
+    }).filter(r => r.phrase && r.sentence);
   }
-
-  function showFinalResult() {
-    window.speechSynthesis.cancel();
-    hide('gameContainer');
-    document.getElementById('finalScore').textContent    = `${stats.ok} / 5`;
-    document.getElementById('finalStreakNum').textContent = streak;
-    show('finalResultScreen');
+  function splitCSVLine(line) {
+    const result=[]; let cur='', inQ=false;
+    for(let i=0;i<line.length;i++){const c=line[i];if(c==='"'){inQ=!inQ;continue;}if(c===','&&!inQ){result.push(cur.trim());cur='';continue;}cur+=c;}
+    result.push(cur.trim()); return result;
   }
-
-  function updateStreakBadge() {
-    document.getElementById('streakNum').textContent = streak;
-  }
-
-  function getHistory() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch { return []; } }
-  function addHistory(rowNum) {
-    let h = getHistory(); h.push(rowNum);
-    if (h.length > HISTORY_SIZE) h.shift();
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(h));
-  }
+  function getHistory() { try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');}catch{return[];} }
+  function addHistory(rowNum) { let h=getHistory();h.push(rowNum);if(h.length>HISTORY_SIZE)h.shift();localStorage.setItem(STORAGE_KEY,JSON.stringify(h)); }
   function clearHistory() { localStorage.removeItem(STORAGE_KEY); }
 
   function makeBlankSentence(phrase, sentence) {
-    const clean = phrase
-      .replace(/\s*[\(（][^\)）]*[\)）]/g, '')
-      .replace(/[~〜～]/g, '')
-      .replace(/[　\s]+/g, ' ')
-      .trim();
-
-    // ① 完全一致
-    const exact = new RegExp(escapeRegExp(clean), 'i');
-    if (exact.test(sentence)) return sentence.replace(exact, '(  )');
-
-    // ② 各単語を語幹化して柔軟にマッチ
-    const words = clean.split(/\s+/);
-    const stemWord = w => w.replace(/(ling|ing|tion|ed|er|est|es|s|d|e)$/i, '');
-
-    const stemPattern = words
-      .map(w => escapeRegExp(stemWord(w)) + '[a-z]*')
-      .join('\\s+');
-    const stemRegex = new RegExp(stemPattern, 'i');
-    if (stemRegex.test(sentence)) return sentence.replace(stemRegex, '(  )');
-
-    // ③ 先頭1単語の語幹のみでフォールバック
-    const firstStem = stemWord(words[0]);
-    if (firstStem.length >= 3) {
-      const firstRegex = new RegExp(escapeRegExp(firstStem) + '[a-z]*', 'i');
-      if (firstRegex.test(sentence)) return sentence.replace(firstRegex, '(  )');
-    }
-
+    const clean = phrase.replace(/\s*[\(（][^\)）]*[\)）]/g,'').replace(/[~〜～]/g,'').replace(/[　\s]+/g,' ').trim();
+    const exact = new RegExp(escapeRegExp(clean),'i');
+    if(exact.test(sentence)) return sentence.replace(exact,'(  )');
+    const words=clean.split(/\s+/);
+    const stemWord=w=>w.replace(/(ling|ing|tion|ed|er|est|es|s|d|e)$/i,'');
+    const stemRegex=new RegExp(words.map(w=>escapeRegExp(stemWord(w))+'[a-z]*').join('\\s+'),'i');
+    if(stemRegex.test(sentence)) return sentence.replace(stemRegex,'(  )');
+    const firstStem=stemWord(words[0]);
+    if(firstStem.length>=3){const r=new RegExp(escapeRegExp(firstStem)+'[a-z]*','i');if(r.test(sentence))return sentence.replace(r,'(  )');}
     return `(  ) → ${sentence}`;
   }
-
   function makeChoices(correctPhrase, groupName) {
-    const same  = shuffle(allPhrases.filter(p => p.group === groupName && p.phrase !== correctPhrase)).map(p => p.phrase);
-    const other = shuffle(allPhrases.filter(p => p.group !== groupName && p.phrase !== correctPhrase)).map(p => p.phrase);
-    const dummies = [...same, ...other].slice(0, 2);
-    return shuffle([correctPhrase, ...dummies]);
+    const same=shuffle(allPhrases.filter(p=>p.group===groupName&&p.phrase!==correctPhrase)).map(p=>p.phrase);
+    const other=shuffle(allPhrases.filter(p=>p.group!==groupName&&p.phrase!==correctPhrase)).map(p=>p.phrase);
+    return shuffle([correctPhrase,...[...same,...other].slice(0,2)]);
   }
-
-  function updateStats() {
-    document.getElementById('totalNum').textContent = stats.total;
-    document.getElementById('okNum').textContent    = stats.ok;
-    document.getElementById('ngNum').textContent    = stats.ng;
-    document.getElementById('rateNum').textContent  = stats.total > 0 ? Math.round(stats.ok / stats.total * 100) + '%' : '-';
-  }
-
-  function shuffle(array) {
-    const a = [...array];
-    for (let i = a.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [a[i], a[j]] = [a[j], a[i]];
-    }
-    return a;
-  }
-
-  function escapeRegExp(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
-  function show(id) { document.getElementById(id).classList.remove('hidden'); }
-  function hide(id) { document.getElementById(id).classList.add('hidden'); }
+  function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+  function escapeRegExp(s){return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');}
+  function show(id){document.getElementById(id).classList.remove('hidden');}
+  function hide(id){document.getElementById(id).classList.add('hidden');}
 </script>
 </body>
 </html>
